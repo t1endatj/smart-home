@@ -1,7 +1,7 @@
 [wokwi]
 version = 1
-firmware = ".pio/build/esp32dev/firmware.bin"
-elf = ".pio/build/esp32dev/firmware.elf"
+firmware = "build/Smart_Home_HardW.ino.bin"
+elf = "build/Smart_Home_HardW.ino.elf"
 
 [net]
 enabled = true
