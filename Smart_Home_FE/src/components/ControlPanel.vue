@@ -1,80 +1,173 @@
 <template>
-  <div class="bg-white rounded-2xl p-6 shadow-md">
-    <h3 class="text-sm font-medium text-gray-500 mb-4">Điều khiển thiết bị</h3>
-    <div class="flex flex-col gap-4">
+  <div class="bg-[#18181c] border border-gray-800/40 rounded-2xl p-6 shadow-xl flex flex-col gap-5 text-gray-200">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+      <h3 class="text-sm font-bold text-white tracking-wider uppercase flex items-center gap-2">
+        ⚙️ PANEL ĐIỀU KHIỂN
+      </h3>
 
-      <!-- Quạt -->
-      <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl">🌀</span>
-          <div>
-            <div class="font-medium text-gray-700">Quạt</div>
-            <div class="text-xs text-gray-400">{{ fanStatus ? 'Đang bật' : 'Đang tắt' }}</div>
-          </div>
-        </div>
-        <button
-          @click="toggleFan"
-          :class="fanStatus
-            ? 'bg-blue-500 hover:bg-blue-600'
-            : 'bg-gray-200 hover:bg-gray-300'"
-          class="w-14 h-7 rounded-full transition-all duration-300 relative"
+    </div>
+
+    <!-- Scenarios -->
+    <div class="flex flex-col gap-2">
+      <div class="grid grid-cols-2 gap-2">
+        <button 
+          class="text-[11px] font-bold py-2 px-3 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 active:scale-95 transition-all uppercase"
+          @click="$emit('scenario', 'welcome')"
         >
-          <span
-            :class="fanStatus ? 'translate-x-7' : 'translate-x-1'"
-            class="absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all duration-300"
-          />
+          🏠 Về Nhà
+        </button>
+        <button 
+          class="text-[11px] font-bold py-2 px-3 rounded-lg border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 active:scale-95 transition-all uppercase"
+          @click="$emit('scenario', 'sleep')"
+        >
+          🌙 Đi Ngủ
+        </button>
+        <button 
+          class="text-[11px] font-bold py-2 px-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 active:scale-95 transition-all uppercase"
+          @click="$emit('scenario', 'sos')"
+        >
+          🚨 Báo Động
+        </button>
+        <button 
+          class="text-[11px] font-bold py-2 px-3 rounded-lg border border-gray-700 bg-gray-800/40 text-gray-300 hover:bg-gray-800/60 active:scale-95 transition-all uppercase"
+          @click="$emit('scenario', 'alloff')"
+        >
+          🔌 Tắt Hết
         </button>
       </div>
+    </div>
 
-      <!-- Khóa cửa -->
-      <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl">🔒</span>
-          <div>
-            <div class="font-medium text-gray-700">Khóa cửa</div>
-            <div class="text-xs text-gray-400">{{ doorStatus ? 'Đang mở' : 'Đang khóa' }}</div>
-          </div>
-        </div>
-        <button
-          @click="toggleDoor"
-          :class="doorStatus
-            ? 'bg-green-500 hover:bg-green-600'
-            : 'bg-gray-200 hover:bg-gray-300'"
-          class="w-14 h-7 rounded-full transition-all duration-300 relative"
+    <!-- Lights -->
+    <div class="flex flex-col gap-2">
+      <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">💡 Hệ thống Đèn</div>
+      <div class="grid grid-cols-2 gap-2">
+        <button 
+          v-for="light in lightsList" 
+          :key="light.name"
+          @click="$emit('toggle', light.name)"
+          :class="[
+            'flex flex-col items-start gap-1 p-2.5 rounded-lg border transition-all active:scale-[0.98]',
+            deviceStates[light.name] 
+              ? 'bg-yellow-500/10 border-yellow-500/40 shadow-md shadow-yellow-500/5' 
+              : 'bg-white/[0.02] border-gray-800/60 hover:bg-white/[0.05]'
+          ]"
         >
-          <span
-            :class="doorStatus ? 'translate-x-7' : 'translate-x-1'"
-            class="absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all duration-300"
-          />
+          <span class="text-xs font-semibold">{{ light.label }}</span>
+          <span :class="['text-[10px] font-bold uppercase', deviceStates[light.name] ? 'text-yellow-400' : 'text-gray-500']">
+            {{ deviceStates[light.name] ? 'ON' : 'OFF' }}
+          </span>
         </button>
       </div>
+    </div>
 
+    <!-- Fans -->
+    <div class="flex flex-col gap-2">
+      <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">🌀 Hệ thống Quạt</div>
+      <div class="grid grid-cols-3 gap-2">
+        <button 
+          v-for="fan in fansList" 
+          :key="fan.name"
+          @click="$emit('toggle', fan.name)"
+          :class="[
+            'flex flex-col items-start gap-1 p-2.5 rounded-lg border transition-all active:scale-[0.98]',
+            deviceStates[fan.name] 
+              ? 'bg-cyan-500/10 border-cyan-500/40 shadow-md shadow-cyan-500/5' 
+              : 'bg-white/[0.02] border-gray-800/60 hover:bg-white/[0.05]'
+          ]"
+        >
+          <span class="text-xs font-semibold truncate w-full">{{ fan.label }}</span>
+          <span :class="['text-[10px] font-bold uppercase', deviceStates[fan.name] ? 'text-cyan-400' : 'text-gray-500']">
+            {{ deviceStates[fan.name] ? 'ON' : 'OFF' }}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Doors -->
+    <div class="flex flex-col gap-2">
+      <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">🚪 Khóa & Cửa</div>
+      <div class="grid grid-cols-2 gap-2">
+        <button 
+          v-for="door in doorsList" 
+          :key="door.name"
+          @click="$emit('toggle', door.name)"
+          :class="[
+            'flex flex-col items-start gap-1 p-2.5 rounded-lg border transition-all active:scale-[0.98]',
+            deviceStates[door.name] 
+              ? 'bg-green-500/10 border-green-500/40 shadow-md shadow-green-500/5' 
+              : 'bg-white/[0.02] border-gray-800/60 hover:bg-white/[0.05]'
+          ]"
+        >
+          <span class="text-xs font-semibold">{{ door.label }}</span>
+          <span :class="['text-[10px] font-bold uppercase', deviceStates[door.name] ? 'text-green-400' : 'text-gray-500']">
+            {{ deviceStates[door.name] ? 'OPEN' : 'CLOSED' }}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Console Monitor -->
+    <div class="flex flex-col gap-1.5 mt-1">
+      <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">📟 ESP32 Serial Monitor</div>
+      <div 
+        ref="consoleEl" 
+        class="bg-[#0f0f14] border border-gray-800/80 rounded-lg h-[115px] overflow-y-auto font-mono text-[11px] text-green-400 p-2.5 whitespace-pre-wrap shadow-inner"
+      >
+        <span class="text-gray-500">[System initialization...]</span>
+        {{ logs }}
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import axios from 'axios'
+import { ref, watch, nextTick } from 'vue'
 
-const fanStatus = ref(false)
-const doorStatus = ref(false)
+const props = defineProps({
+  deviceStates: {
+    type: Object,
+    required: true
+  },
+  logs: {
+    type: String,
+    default: ''
+  }
+})
 
-const API = 'http://localhost:8000'
+defineEmits(['toggle', 'scenario'])
 
-async function toggleFan() {
-  fanStatus.value = !fanStatus.value
-  await axios.post(`${API}/api/control`, {
-    device: 'fan',
-    status: fanStatus.value
+const consoleEl = ref(null)
+
+const lightsList = [
+  { name: 'Đèn Hành Lang', label: 'Hành Lang' },
+  { name: 'Đèn Phòng Ngủ', label: 'Phòng Ngủ' },
+  { name: 'Đèn Nhà Vệ Sinh', label: 'Vệ Sinh' },
+  { name: 'Đèn Chùm Trung Tâm', label: 'Phòng Khách' },
+  { name: 'Đèn Nhà Bếp', label: 'Nhà Bếp' },
+  { name: 'Đèn Khu KT', label: 'Khu Kỹ Thuật' }
+]
+
+const fansList = [
+  { name: 'Quạt Phòng Ngủ', label: 'Phòng Ngủ' },
+  { name: 'Quạt Trần Phòng Khách', label: 'P. Khách' },
+  { name: 'Quạt Nhà Bếp', label: 'Nhà Bếp' }
+]
+
+const doorsList = [
+  { name: 'Cửa Chính', label: 'Cửa Chính' },
+  { name: 'Cửa Nhà Vệ Sinh', label: 'Cửa Vệ Sinh' },
+  { name: 'Cửa Phòng Ngủ', label: 'Cửa Phòng Ngủ' },
+  { name: 'Cửa Nhà Bếp', label: 'Cửa Nhà Bếp' },
+  { name: 'Cửa Khu KT', label: 'Cửa Khu KT' }
+]
+
+// Auto scroll console log to bottom
+watch(() => props.logs, () => {
+  nextTick(() => {
+    if (consoleEl.value) {
+      consoleEl.value.scrollTop = consoleEl.value.scrollHeight
+    }
   })
-}
-
-async function toggleDoor() {
-  doorStatus.value = !doorStatus.value
-  await axios.post(`${API}/api/control`, {
-    device: 'door',
-    status: doorStatus.value
-  })
-}
+})
 </script>
