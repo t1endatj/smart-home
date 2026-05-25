@@ -66,6 +66,16 @@
   },
   {
     "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/main.cpp",
+    "Include": "WiFi.h",
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/main.cpp",
+    "Include": "Network.h",
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/main.cpp",
     "Include": "",
     "Includepath": null
   },
@@ -96,6 +106,76 @@
   },
   {
     "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Wire/src/Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/AP.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/STA.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFi.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiAP.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiGeneric.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiMulti.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiSTA.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiScan.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkClient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkEvents.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkInterface.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkManager.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkServer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkUdp.cpp",
     "Include": "",
     "Includepath": null
   },
