@@ -3,26 +3,48 @@
   "author": "Smart Home Test",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
-    { "type": "wokwi-dht22", "id": "dht1", "top": -114.9, "left": 253.8, "attrs": {} },
-    { "type": "wokwi-led", "id": "led1", "top": 15.6, "left": 215, "attrs": { "color": "red" } },
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 100, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": 0, "left": 300, "attrs": {} },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 0, "left": 500, "attrs": {} },
     {
-      "type": "wokwi-resistor",
-      "id": "r1",
-      "top": 119.15,
-      "left": 124.8,
-      "attrs": { "value": "330" }
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 34.8,
+      "left": 752.6,
+      "attrs": { "color": "yellow" }
+    },
+    { "type": "wokwi-resistor", "id": "r1", "top": 100, "left": 700, "attrs": { "value": "330" } },
+    { "type": "wokwi-servo", "id": "servo1", "top": 372.4, "left": 153.6, "attrs": {} },
+    { "type": "wokwi-l298n", "id": "l298n1", "top": 350, "left": 550, "attrs": {} },
+    {
+      "type": "wokwi-dc-motor",
+      "id": "motor1",
+      "top": 350,
+      "left": 820,
+      "attrs": { "label": "Fan" }
     }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "esp:15", "dht1:SDA", "green", [ "h177.64", "v-153.6", "h-86.5" ] ],
-    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
-    [ "esp:2", "led1:A", "green", [ "h139.24", "v-105.6" ] ],
-    [ "led1:C", "r1:2", "green", [ "v0" ] ],
-    [ "r1:1", "esp:GND", "black", [ "v0" ] ]
+    [ "esp:3V3", "dht1:VCC", "red", [] ],
+    [ "esp:GND.1", "dht1:GND", "black", [] ],
+    [ "esp:15", "dht1:SDA", "green", [] ],
+    [ "esp:3V3", "ldr1:VCC", "red", [ "v-119.2", "h667.39" ] ],
+    [ "esp:GND.1", "ldr1:GND", "black", [ "v111.2", "h667.39" ] ],
+    [ "esp:34", "ldr1:AO", "orange", [ "v-4", "h667.39" ] ],
+    [ "esp:2", "led1:A", "green", [] ],
+    [ "led1:C", "r1:2", "green", [ "h-9.2", "v28.85" ] ],
+    [ "r1:1", "esp:GND.1", "black", [ "h-700", "v115.15", "h4.61" ] ],
+    [ "esp:3V3", "servo1:V+", "red", [ "h-81.41", "v303.1" ] ],
+    [ "esp:GND.2", "servo1:GND", "black", [ "h24.04", "v24.8", "v268.8" ] ],
+    [ "esp:13", "servo1:PWM", "yellow", [ "h-33.41", "v178.4", "h182.4" ] ],
+    [ "esp:5V", "l298n1:VCC", "red", [] ],
+    [ "esp:GND.2", "l298n1:GND", "black", [] ],
+    [ "esp:25", "l298n1:IN1", "blue", [] ],
+    [ "esp:26", "l298n1:IN2", "blue", [] ],
+    [ "l298n1:MOTOR_A1", "motor1:A+", "green", [] ],
+    [ "l298n1:MOTOR_A2", "motor1:A-", "green", [] ]
   ],
   "dependencies": {}
 }

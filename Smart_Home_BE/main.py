@@ -70,3 +70,12 @@ def get_latest():
     if row is None:
         return {"message": "Chưa có dữ liệu"}
     return {"temperature": row[0], "humidity": row[1], "timestamp": row[2]}
+
+class ControlData(BaseModel):
+    device: str
+    status: bool
+
+@app.post("/api/control")
+def control_device(data: ControlData):
+    print(f"Dieu khien: {data.device} -> {'BAT' if data.status else 'TAT'}")
+    return {"status": "ok", "device": data.device, "value": data.status}
