@@ -1,3 +1,4 @@
+#line 1 "/home/phuchoangsrc/smart-home/Smart_Home_HardW/src/main.cpp"
 #include <Arduino.h>
 
 #include "DhtSensor.h"

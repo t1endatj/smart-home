@@ -1,0 +1,107 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/esp32"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/Smart_Home_HardW.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DhtSensor.cpp",
+    "Include": "DHT.h",
+    "Includepath": "/home/phuchoangsrc/Arduino/libraries/DHT_sensor_library"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DhtSensor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DoorLock.cpp",
+    "Include": "ESP32Servo.h",
+    "Includepath": "/home/phuchoangsrc/Arduino/libraries/ESP32Servo/src"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DoorLock.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/FanMotor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/GasSensor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/LedLight.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/OledDashboard.cpp",
+    "Include": "Wire.h",
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Wire/src"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/OledDashboard.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/PirSensor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/main.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/DHT_sensor_library/DHT.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/DHT_sensor_library/DHT_U.cpp",
+    "Include": "Adafruit_Sensor.h",
+    "Includepath": "/home/phuchoangsrc/Arduino/libraries/Adafruit_Unified_Sensor"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/DHT_sensor_library/DHT_U.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/ESP32Servo/src/ESP32PWM.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/ESP32Servo/src/ESP32Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Wire/src/Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/Adafruit_Unified_Sensor/Adafruit_Sensor.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
