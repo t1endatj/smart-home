@@ -84,6 +84,7 @@ let scene, camera, renderer, animationFrameId
 let rotatingFans = []
 let doors = []
 let lightObjects = {}
+let glowTexture = null
 
 const HX = 30, HY = 2, HZ = 20
 let view = 'persp'
@@ -238,15 +239,65 @@ function createDoor(w, h, d, x, y, z, hingeX, hingeZ, name, info, openSwingAngle
   return pivot;
 }
 
+function createGlowTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 128
+  const ctx = canvas.getContext('2d')
+  const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
+  grad.addColorStop(0, 'rgba(255, 235, 100, 1.0)')
+  grad.addColorStop(0.2, 'rgba(255, 190, 40, 0.8)')
+  grad.addColorStop(0.5, 'rgba(255, 110, 0, 0.35)')
+  grad.addColorStop(1, 'rgba(255, 80, 0, 0.0)')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, 128, 128)
+  return new THREE.CanvasTexture(canvas)
+}
+
 // PointLight helper
 function createPointLight(x, y, z, name) {
-  const light = new THREE.PointLight(0xffe066, 0, 18, 1.2)
-  light.position.set(x, y - 0.4, z)
-  light.castShadow = true
-  light.shadow.bias = -0.002
-  light.shadow.mapSize.set(512, 512)
+  // Use SpotLight instead of PointLight to project light downwards (cone of light)
+  const light = new THREE.SpotLight(0xffbb00, 0, 32, Math.PI / 3.2, 0.7, 1.0)
+  light.position.set(x, y - 0.3, z)
+  
+  // Set target directly below the light
+  const target = new THREE.Object3D()
+  target.position.set(x, 0, z)
+  scene.add(target)
+  light.target = target
+  light.castShadow = false
   scene.add(light)
-  lightObjects[name] = light
+  
+  // Floor glow plane
+  const size = name === 'Đèn Chùm Trung Tâm' ? 16 : 10
+  const glowGeo = new THREE.PlaneGeometry(size, size)
+  const glowMat = new THREE.MeshBasicMaterial({
+    map: glowTexture,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
+  const glowMesh = new THREE.Mesh(glowGeo, glowMat)
+  glowMesh.position.set(x, 0.08, z)
+  glowMesh.rotation.x = -Math.PI / 2
+  scene.add(glowMesh)
+
+  // Bulb glow halo sprite
+  const bulbGlowMat = new THREE.SpriteMaterial({
+    map: glowTexture,
+    color: 0xffdd66,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
+  const bulbGlow = new THREE.Sprite(bulbGlowMat)
+  bulbGlow.position.set(x, y - 0.2, z)
+  bulbGlow.scale.set(3.5, 3.5, 1)
+  scene.add(bulbGlow)
+
+  lightObjects[name] = { light, glow: glowMesh, bulbGlow }
 }
 
 function getDeviceByName(name) {
@@ -262,7 +313,7 @@ function getDeviceByName(name) {
 const WH = 6;
 const WT = 0.4;
 const FH = WH / 2 + 0.15;
-const WC = 0xf0ebe0;
+const WC = 0xb5aea2;
 
 function lbl(text, x, y, z, sc) {
   const cv = document.createElement('canvas'); cv.width = 340; cv.height = 64;
@@ -278,6 +329,8 @@ function initThree() {
   rotatingFans.length = 0
   doors.length = 0
   for (let key in lightObjects) delete lightObjects[key]
+
+  glowTexture = createGlowTexture()
 
   const rect = container.value.getBoundingClientRect()
   let width = rect.width
@@ -298,33 +351,28 @@ function initThree() {
   renderer = new THREE.WebGLRenderer({ canvas: canvasEl.value, antialias: true })
   renderer.setSize(width, height)
   renderer.setPixelRatio(window.devicePixelRatio || 1)
-  renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.shadowMap.enabled = false
 
-  // Ambient & directional lights adjusted for bright day settings
-  scene.add(new THREE.AmbientLight(0xfff8f0, 0.7))
-  const sun = new THREE.DirectionalLight(0xfff4e0, 0.95)
+  // Ambient & directional lights adjusted for warm glow environment
+  scene.add(new THREE.AmbientLight(0xfff8f0, 0.45))
+  const sun = new THREE.DirectionalLight(0xfff4e0, 0.65)
   sun.position.set(60, 90, 40)
-  sun.castShadow = true
-  sun.shadow.mapSize.set(1024, 1024)
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -100
-  sun.shadow.camera.right = sun.shadow.camera.top = 100
-  sun.shadow.bias = -0.001
+  sun.castShadow = false
   scene.add(sun)
   
-  const fill = new THREE.DirectionalLight(0xc8e0ff, 0.35)
+  const fill = new THREE.DirectionalLight(0xc8e0ff, 0.25)
   fill.position.set(-50, 30, -30)
   scene.add(fill)
 
   // ── BUILD ENVIRONMENT ──
   // Floor
-  B(60, 0.28, 40, 0xd5ccb0, 30, -0.14, 20)
-  B(19.6, .1, 9.6, 0xd5d0bc, 10, .06, 35)   // Hành Lang
-  B(19.6, .1, 17.6, 0xcfc8a8, 10, .06, 21)   // Phòng Ngủ
-  B(19.6, .1, 11.6, 0xbecec6, 10, .06, 6)    // Nhà VS
-  B(24.6, .1, 39.6, 0xc8c2a0, 32.5, .06, 20)  // Phòng Khách
-  B(14.6, .1, 11.6, 0xb2c0aa, 52.5, .06, 34)  // Khu KT
-  B(14.6, .1, 27.6, 0xbcaa8c, 52.5, .06, 14)  // Nhà Bếp
+  B(60, 0.28, 40, 0xa09c85, 30, -0.14, 20)
+  B(19.6, .1, 9.6, 0x9c9888, 10, .06, 35, 'Sàn Hành Lang', 'Sàn hành lang')
+  B(19.6, .1, 17.6, 0x948f70, 10, .06, 21, 'Sàn Phòng Ngủ', 'Sàn phòng ngủ')
+  B(19.6, .1, 11.6, 0x7f8d87, 10, .06, 6, 'Sàn Nhà Vệ Sinh', 'Sàn phòng vệ sinh')
+  B(24.6, .1, 39.6, 0x908c70, 32.5, .06, 20, 'Sàn Phòng Khách', 'Sàn phòng khách')
+  B(14.6, .1, 11.6, 0x808c7a, 52.5, .06, 34, 'Sàn Khu KT', 'Sàn khu kỹ thuật')
+  B(14.6, .1, 27.6, 0x857860, 52.5, .06, 14, 'Sàn Nhà Bếp', 'Sàn nhà bếp')
 
   // Outer Walls
   B(60, WH, WT, WC, 30, FH, -0.2)
@@ -430,19 +478,20 @@ function initThree() {
 
 function syncDeviceStates(states) {
   if (!states) return
+
   Object.keys(states).forEach(name => {
     const isON = states[name]
     
     // Lights
     if (name.startsWith('Đèn')) {
-      const pointLight = lightObjects[name]
+      const lightData = lightObjects[name]
       const lampMesh = getDeviceByName(name)
       if (lampMesh) {
         if (isON) {
-          lampMesh.material.color.setHex(0xffffff)
+          lampMesh.material.color.setHex(0xffe066)
           if (lampMesh.material.emissive) {
-            lampMesh.material.emissive.setHex(0xffe066)
-            lampMesh.material.emissiveIntensity = 1.0
+            lampMesh.material.emissive.setHex(0xffd700)
+            lampMesh.material.emissiveIntensity = 1.2
           }
         } else {
           lampMesh.material.color.setHex(0x555555)
@@ -452,8 +501,16 @@ function syncDeviceStates(states) {
           }
         }
       }
-      if (pointLight) {
-        pointLight.intensity = isON ? 1.6 : 0
+      if (lightData) {
+        if (lightData.light) {
+          lightData.light.intensity = isON ? 22.0 : 0
+        }
+        if (lightData.glow) {
+          lightData.glow.material.opacity = isON ? 0.8 : 0
+        }
+        if (lightData.bulbGlow) {
+          lightData.bulbGlow.material.opacity = isON ? 0.7 : 0
+        }
       }
     }
     // Fans
