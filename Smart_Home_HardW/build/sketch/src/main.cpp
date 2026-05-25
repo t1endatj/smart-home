@@ -1,5 +1,7 @@
 #line 1 "/home/phuchoangsrc/smart-home/Smart_Home_HardW/src/main.cpp"
 #include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
 
 #include "DhtSensor.h"
 #include "DoorLock.h"
@@ -11,6 +13,16 @@
 #include "PirSensor.h"
 
 namespace {
+constexpr char WIFI_SSID[] = "Wokwi-GUEST";
+constexpr char WIFI_PASSWORD[] = "";
+constexpr char COMMAND_SERVER_HOST[] = "host.wokwi.internal";
+constexpr uint16_t COMMAND_SERVER_PORT = 5001;
+constexpr unsigned long WIFI_RETRY_DELAY_MS = 500;
+constexpr unsigned long SOCKET_RECONNECT_INTERVAL_MS = 3000;
+
+WiFiClient commandSocket;
+unsigned long lastSocketConnectAttemptMs = 0;
+
 void printHelp() {
   Serial.println();
   Serial.println("Lenh test theo diagram.json:");
@@ -36,6 +48,13 @@ void printHelp() {
   Serial.println("  y / Y : OLED bat / tat");
   Serial.println("  a : Auto 1 lan (DHT->quat PK, PIR->den PK, MQ2->quat bep)");
   Serial.println("  p : In trang thai");
+  Serial.println();
+  Serial.println("Lenh qua server Python:");
+  Serial.print("  TCP: ");
+  Serial.print(COMMAND_SERVER_HOST);
+  Serial.print(":");
+  Serial.println(COMMAND_SERVER_PORT);
+  Serial.println("  HTTP: POST /command {\"command\":\"1\"} hoac GET /send?cmd=1");
   Serial.println("-----------------------------------");
 }
 
@@ -52,6 +71,47 @@ void setupDevices() {
   gasSensorBegin();
   oledDashboardBegin();
   doorLockBegin();
+}
+
+void setupWifi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  Serial.print("Dang ket noi WiFi ");
+  Serial.print(WIFI_SSID);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(WIFI_RETRY_DELAY_MS);
+    Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.print("WiFi da ket noi. ESP32 IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+void connectCommandSocket() {
+  if (WiFi.status() != WL_CONNECTED || commandSocket.connected()) {
+    return;
+  }
+
+  const unsigned long now = millis();
+  if (lastSocketConnectAttemptMs != 0 &&
+      now - lastSocketConnectAttemptMs < SOCKET_RECONNECT_INTERVAL_MS) {
+    return;
+  }
+  lastSocketConnectAttemptMs = now;
+
+  Serial.print("Dang ket noi command server ");
+  Serial.print(COMMAND_SERVER_HOST);
+  Serial.print(":");
+  Serial.println(COMMAND_SERVER_PORT);
+
+  if (commandSocket.connect(COMMAND_SERVER_HOST, COMMAND_SERVER_PORT)) {
+    Serial.println("Da ket noi command server.");
+    commandSocket.println("ESP32 Smart Home online");
+  } else {
+    Serial.println("Chua ket noi duoc command server.");
+  }
 }
 
 void readAndPrintDht() {
@@ -270,11 +330,28 @@ void handleSerialCommands() {
     handleSerialCommand(Serial.read());
   }
 }
+
+void handleSocketCommands() {
+  connectCommandSocket();
+
+  while (commandSocket.connected() && commandSocket.available()) {
+    const char cmd = static_cast<char>(commandSocket.read());
+    if (cmd == '\n' || cmd == '\r') {
+      continue;
+    }
+
+    Serial.print("Lenh socket: ");
+    Serial.println(cmd);
+    handleSerialCommand(cmd);
+  }
+}
 }
 
 void setup() {
   setupSerial();
   setupDevices();
+  setupWifi();
+  connectCommandSocket();
 
   Serial.println("=> San sang!");
   printHelp();
@@ -282,5 +359,6 @@ void setup() {
 
 void loop() {
   handleSerialCommands();
+  handleSocketCommands();
   delay(10);
 }

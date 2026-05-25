@@ -168,6 +168,58 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/freertos_stats.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/io_pin_remap.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Arduino.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFi.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Print.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiType.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_wifi/include/esp_wifi_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_wifi/include/esp_wifi_types_generic.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_event/include/esp_event_base.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_hw_support/include/esp_interface.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_wifi/include/local/esp_wifi_types_native.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_wifi/include/esp_wifi_types_generic.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiSTA.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiGeneric.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_event/include/esp_event.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_wifi/include/esp_smartconfig.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_netif/include/esp_netif_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_netif/include/esp_netif_ip_addr.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_eth/include/esp_eth_driver.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_eth/include/esp_eth_com.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/include/hal/eth_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_eth/include/esp_eth_spec.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_eth/include/esp_eth_mac_spi.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_eth/include/esp_eth_mac.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_driver_spi/include/driver/spi_master.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/esp32/include/hal/spi_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/include/hal/spi_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_driver_spi/include/driver/spi_common.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_system/include/esp_ipc.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_eth/include/esp_eth_mac_esp.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_eth/include/esp_eth_phy.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/espressif__network_provisioning/include/network_provisioning/manager.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/protocomm/include/common/protocomm.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/protocomm/include/security/protocomm_security.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/espressif__network_provisioning/include/network_provisioning/network_config.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/Network.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkInterface.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Printable.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkEvents.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkManager.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/WString.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkClient.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Client.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkServer.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Server.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkUdp.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Udp.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/cbuf.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_ringbuf/include/freertos/ringbuf.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiAP.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiScan.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiClient.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiServer.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiUdp.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkUdp.h \
  /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DhtSensor.h \
  /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DoorLock.h \
  /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/FanMotor.h \
