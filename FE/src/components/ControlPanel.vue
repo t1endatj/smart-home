@@ -138,6 +138,44 @@
         </div>
       </div>
     </div>
+
+    <!-- AI Command Input -->
+    <div class="flex flex-col gap-1 border-t border-gray-800/40 pt-2 mt-0.5">
+      <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">🤖 Trợ lý AI</div>
+      <form @submit.prevent="submitCommand" class="flex gap-2 items-center">
+        <!-- Nút Micro giọng nói -->
+        <button
+          type="button"
+          @click="toggleVoiceRecognition"
+          :class="[
+            'p-2 rounded-lg border text-xs transition-all active:scale-95 shrink-0 flex items-center justify-center h-8 w-8',
+            isListening 
+              ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse shadow-md shadow-red-500/10' 
+              : 'bg-white/[0.02] border-gray-800/80 hover:bg-white/[0.05] text-gray-400'
+          ]"
+          :title="isListening ? 'Đang lắng nghe... Click để dừng' : 'Ra lệnh bằng giọng nói'"
+          :disabled="aiLoading"
+        >
+          <span>🎙️</span>
+        </button>
+
+        <input 
+          v-model="commandText"
+          type="text" 
+          :placeholder="isListening ? 'Đang nghe giọng nói của bạn...' : 'Nhập lệnh hoặc dùng giọng nói...'" 
+          class="flex-1 bg-[#0f0f14] border border-gray-800/80 focus:border-purple-500/50 rounded-lg px-2.5 py-1.5 text-[11px] outline-none transition-all placeholder-gray-600 text-gray-200 h-8"
+          :disabled="aiLoading || isListening"
+        />
+        <button 
+          type="submit" 
+          class="bg-purple-600/10 hover:bg-purple-600/20 active:scale-95 border border-purple-500/30 text-purple-300 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 shrink-0 h-8"
+          :disabled="aiLoading || isListening || !commandText.trim()"
+        >
+          <span v-if="aiLoading" class="animate-spin text-[8px]">🔄</span>
+          <span>Gửi</span>
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -152,10 +190,86 @@ const props = defineProps({
   logs: {
     type: Array,
     default: () => []
+  },
+  aiLoading: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['toggle', 'scenario'])
+const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log'])
+
+const commandText = ref('')
+const isListening = ref(false)
+let recognition = null
+
+// Initialize SpeechRecognition if browser supported
+if (typeof window !== 'undefined') {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition()
+    recognition.continuous = false
+    recognition.lang = 'vi-VN'
+    recognition.interimResults = false
+    recognition.maxAlternatives = 1
+
+    recognition.onstart = () => {
+      isListening.value = true
+      emit('add-log', { tag: 'SYSTEM', msg: 'Đang lắng nghe giọng nói...', type: 'info' })
+    }
+
+    recognition.onresult = (event) => {
+      const resultText = event.results[0][0].transcript
+      if (resultText) {
+        commandText.value = resultText
+        emit('add-log', { tag: 'SYSTEM', msg: `Nhận diện: "${resultText}"`, type: 'success' })
+        submitCommand()
+      }
+    }
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+      isListening.value = false
+      let msg = 'Lỗi nhận diện giọng nói.'
+      if (event.error === 'not-allowed') {
+        msg = 'Lỗi: Trình duyệt bị từ chối quyền truy cập Micro.'
+      } else if (event.error === 'no-speech') {
+        msg = 'Lỗi: Không nghe thấy giọng nói.'
+      }
+      emit('add-log', { tag: 'SYSTEM', msg, type: 'danger' })
+    }
+
+    recognition.onend = () => {
+      isListening.value = false
+    }
+  }
+}
+
+function toggleVoiceRecognition() {
+  if (!recognition) {
+    alert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói (Speech Recognition). Vui lòng thử trên Chrome hoặc Edge.')
+    return
+  }
+
+  if (isListening.value) {
+    recognition.stop()
+  } else {
+    commandText.value = ''
+    try {
+      recognition.start()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+}
+
+function submitCommand() {
+  if (!commandText.value.trim() || props.aiLoading) return
+  emit('ai-command', commandText.value.trim())
+  commandText.value = ''
+}
+
+
 
 const consoleEl = ref(null)
 

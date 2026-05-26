@@ -35,8 +35,11 @@
         <ControlPanel 
           :deviceStates="deviceStates"
           :logs="logs"
+          :aiLoading="aiLoading"
           @toggle="toggleDevice($event, 'UI Switch')"
           @scenario="runScenario"
+          @ai-command="handleAICommand"
+          @add-log="addLog($event.tag, $event.msg, $event.type)"
           class="h-full"
         />
       </div>
@@ -54,6 +57,7 @@ import SmartHome3D from './components/SmartHome3D.vue'
 const API = 'http://localhost:8000'
 
 const connected = ref(false)
+const aiLoading = ref(false)
 
 // Shared states for all lights, fans and doors
 const deviceStates = ref({
@@ -200,6 +204,50 @@ function runScenario(type) {
     Object.keys(deviceStates.value).forEach(device => {
       if (deviceStates.value[device]) toggleDevice(device, 'Scenario Auto')
     })
+  }
+}
+
+async function handleAICommand(command) {
+  if (aiLoading.value) return
+  
+  aiLoading.value = true
+  addLog('SYSTEM', `Đang gửi lệnh AI: "${command}"...`, 'info')
+  
+  try {
+    const res = await axios.post(`${API}/api/ai/command`, { command })
+    const data = res.data
+    
+    // In phản hồi của AI vào Console Log
+    if (data.response) {
+      addLog('SYSTEM', `Trợ lý AI: ${data.response}`, 'success')
+    }
+    
+    // Kích hoạt kịch bản nếu có
+    if (data.scenario) {
+      runScenario(data.scenario)
+    }
+    
+    // Thực thi các hành động trên thiết bị
+    if (data.actions && Array.isArray(data.actions)) {
+      for (const action of data.actions) {
+        const { device, status } = action
+        if (deviceStates.value[device] !== undefined) {
+          // Chỉ thay đổi trạng thái nếu trạng thái hiện tại khác trạng thái mong muốn
+          if (deviceStates.value[device] !== status) {
+            await toggleDevice(device, 'AI Assistant')
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Lỗi khi gọi API AI:', err)
+    let errorMsg = 'Không thể kết nối đến máy chủ AI.'
+    if (err.response && err.response.data && err.response.data.response) {
+      errorMsg = err.response.data.response
+    }
+    addLog('SYSTEM', `Trợ lý AI: Lỗi - ${errorMsg}`, 'danger')
+  } finally {
+    aiLoading.value = false
   }
 }
 
