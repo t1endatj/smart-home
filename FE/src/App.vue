@@ -18,24 +18,26 @@
     </nav>
 
     <!-- Grid Content Layout -->
-    <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-100px)] lg:min-h-[500px]">
       
       <!-- Left Column: 3D Model -->
-      <div class="lg:col-span-2 flex flex-col gap-6">
+      <div class="lg:col-span-2 h-full flex flex-col">
         <!-- 3D Digital Twin Viewer -->
         <SmartHome3D 
           :deviceStates="deviceStates"
           @toggle="toggleDevice($event, '3D Click')"
+          class="h-full"
         />
       </div>
 
       <!-- Right Column: Control Panel and Monitor Logs -->
-      <div class="flex flex-col gap-6">
+      <div class="h-full flex flex-col">
         <ControlPanel 
           :deviceStates="deviceStates"
           :logs="logs"
           @toggle="toggleDevice($event, 'UI Switch')"
           @scenario="runScenario"
+          class="h-full"
         />
       </div>
 
@@ -71,28 +73,36 @@ const deviceStates = ref({
   'Cửa Khu KT': false
 })
 
-const logs = ref('')
+const logs = ref([])
+
+function addLog(tag, msg, type = 'info') {
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false })
+  logs.value.push({ time, tag, msg, type })
+  if (logs.value.length > 50) {
+    logs.value.shift()
+  }
+}
 
 function logToConsole(device, state, source) {
-  const time = new Date().toLocaleTimeString()
-  let espCmd = ''
-  let relayMsg = ''
+  let tag = 'LIGHT'
+  let msg = ''
   
   if (device.startsWith('Đèn')) {
-    espCmd = state ? `ESP32_CMD_LIGHT_ON` : `ESP32_CMD_LIGHT_OFF`
-    relayMsg = `Relay Channel ${getRelayChannel(device)} -> ${state ? 'CLOSED (ON)' : 'OPEN (OFF)'}`
+    tag = 'LIGHT'
+    msg = `${state ? 'BẬT' : 'TẮT'} ${device.toLowerCase()}`
+    addLog(tag, msg, state ? 'success' : 'info')
+    addLog('RELAY', `Kích hoạt Rơ-le Kênh ${getRelayChannel(device)} (${state ? 'BẬT' : 'TẮT'})`, 'warning')
   } else if (device.startsWith('Quạt')) {
-    espCmd = state ? `ESP32_CMD_FAN_ON` : `ESP32_CMD_FAN_OFF`
-    relayMsg = `Relay Channel ${getRelayChannel(device)} -> ${state ? 'CLOSED (ON)' : 'OPEN (OFF)'}`
+    tag = 'FAN'
+    msg = `${state ? 'BẬT' : 'TẮT'} ${device.toLowerCase()}`
+    addLog(tag, msg, state ? 'success' : 'info')
+    addLog('RELAY', `Kích hoạt Rơ-le Kênh ${getRelayChannel(device)} (${state ? 'BẬT' : 'TẮT'})`, 'warning')
   } else if (device.startsWith('Cửa')) {
-    espCmd = state ? `ESP32_CMD_SOLENOID_UNLOCK` : `ESP32_CMD_SOLENOID_LOCK`
-    relayMsg = `Solenoid lock -> ${state ? 'UNLOCKED (Open)' : 'LOCKED (Closed)'}`
+    tag = 'DOOR'
+    msg = `${state ? 'MỞ KHÓA' : 'ĐÓNG KHÓA'} ${device.toLowerCase()}`
+    addLog(tag, msg, state ? 'success' : 'info')
+    addLog('RELAY', `${state ? 'Mở khóa' : 'Khóa'} chốt điện từ`, 'warning')
   }
-
-  logs.value += `[${time}] [Source: ${source}]
->> ESP32: Broadcast command [${espCmd}] for "${device}"
->> Status: ${relayMsg}
-----------------------------------------\n`
 }
 
 function getRelayChannel(device) {
@@ -146,15 +156,17 @@ async function toggleDevice(name, source = 'UI Panel') {
 }
 
 function runScenario(type) {
-  logs.value += `\n[${new Date().toLocaleTimeString()}] *** KÍCH HOẠT KỊCH BẢN: ${type.toUpperCase()} ***\n`
-  
   if (type === 'welcome') {
+    addLog('SYSTEM', 'Kịch bản: VỀ NHÀ', 'info')
+    addLog('ALERT', 'Gửi thông báo: Bot Telegram', 'info')
     if (!deviceStates.value['Cửa Chính']) toggleDevice('Cửa Chính', 'Scenario Auto')
     if (!deviceStates.value['Đèn Hành Lang']) toggleDevice('Đèn Hành Lang', 'Scenario Auto')
     if (!deviceStates.value['Đèn Chùm Trung Tâm']) toggleDevice('Đèn Chùm Trung Tâm', 'Scenario Auto')
     if (!deviceStates.value['Quạt Trần Phòng Khách']) toggleDevice('Quạt Trần Phòng Khách', 'Scenario Auto')
   } 
   else if (type === 'sleep') {
+    addLog('SYSTEM', 'Kịch bản: ĐI NGỦ', 'info')
+    addLog('ALERT', 'Kích hoạt an ninh đêm', 'success')
     ['Cửa Chính', 'Cửa Nhà Vệ Sinh', 'Cửa Phòng Ngủ', 'Cửa Nhà Bếp', 'Cửa Khu KT'].forEach(door => {
       if (deviceStates.value[door]) toggleDevice(door, 'Scenario Auto')
     })
@@ -168,6 +180,9 @@ function runScenario(type) {
     if (!deviceStates.value['Quạt Phòng Ngủ']) toggleDevice('Quạt Phòng Ngủ', 'Scenario Auto')
   } 
   else if (type === 'sos') {
+    addLog('MQ2', 'Khói vượt ngưỡng: 380 ppm', 'danger')
+    addLog('ALERT', 'Gửi báo động: Telegram + Còi', 'danger')
+    addLog('RELAY', 'Bật quạt hút bếp tự động', 'warning')
     ['Cửa Chính', 'Cửa Nhà Vệ Sinh', 'Cửa Phòng Ngủ', 'Cửa Nhà Bếp', 'Cửa Khu KT'].forEach(door => {
       if (!deviceStates.value[door]) toggleDevice(door, 'Scenario Auto')
     })
@@ -179,6 +194,9 @@ function runScenario(type) {
     })
   } 
   else if (type === 'alloff') {
+    addLog('SYSTEM', 'Kịch bản: TẮT HẾT', 'info')
+    addLog('MQ2', 'Khói giảm - Bình thường', 'success')
+    addLog('ALERT', 'Tắt còi báo động - An toàn', 'success')
     Object.keys(deviceStates.value).forEach(device => {
       if (deviceStates.value[device]) toggleDevice(device, 'Scenario Auto')
     })
@@ -201,7 +219,9 @@ onMounted(() => {
   
   // Set initial boot log
   setTimeout(() => {
-    logs.value = `[${new Date().toLocaleTimeString()}] ESP32-WROOM-3D Booted.\n[RELAY] Relay board channels initialised.\n[SERIAL] Baudrate 115200 active.\nReady for hardware demo commands.\n----------------------------------------\n`
+    addLog('SYSTEM', 'ESP32 khởi động thành công.', 'success')
+    addLog('RELAY', 'Khởi tạo kênh Rơ-le thành công.', 'warning')
+    addLog('SYSTEM', 'Serial 115200 sẵn sàng.', 'info')
   }, 100)
 })
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full h-[600px] bg-[#121214] rounded-2xl overflow-hidden border border-gray-800/20 shadow-xl flex flex-col">
+  <div class="relative w-full h-full min-h-[500px] bg-[#121214] rounded-2xl overflow-hidden border border-gray-800/20 shadow-xl flex flex-col">
     <!-- View Options Header inside canvas -->
     <div id="controls" class="absolute top-4 left-4 right-4 z-10 flex gap-2 justify-center pointer-events-none">
       <button 
