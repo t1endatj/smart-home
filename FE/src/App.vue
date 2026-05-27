@@ -122,6 +122,16 @@ function applyHomeState(payload) {
   }
 }
 
+async function syncHomeState() {
+  try {
+    const res = await axios.get(`${API}/api/state`)
+    const payload = res?.data?.payload
+    if (payload) applyHomeState(payload)
+  } catch {
+    // Ignore transient sync failures; connectivity is handled by pingAPI.
+  }
+}
+
 let persistTimer
 async function persistHomeState() {
   const payload = {
@@ -334,18 +344,14 @@ async function pingAPI() {
 }
 
 let interval
+let syncInterval
 onMounted(() => {
   // Bootstrap FE state from BE snapshot (if any)
-  axios
-    .get(`${API}/api/state`)
-    .then((res) => {
-      const payload = res?.data?.payload
-      if (payload) applyHomeState(payload)
-    })
-    .catch(() => {})
+  syncHomeState()
 
   pingAPI()
   interval = setInterval(pingAPI, 5000)
+  syncInterval = setInterval(syncHomeState, 1000)
   
   // Set initial boot log
   setTimeout(() => {
@@ -360,6 +366,7 @@ watch(logs, schedulePersistHomeState, { deep: true })
 
 onUnmounted(() => {
   clearInterval(interval)
+  clearInterval(syncInterval)
   clearTimeout(persistTimer)
 })
 </script>
