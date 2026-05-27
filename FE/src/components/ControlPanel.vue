@@ -51,19 +51,33 @@
     </div>
 
     <!-- Environment Sensors -->
-    <div class="grid grid-cols-2 gap-2 bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 text-xs">
-      <div class="flex items-center gap-2">
+    <div class="grid grid-cols-3 gap-1 bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 text-xs">
+      <div class="flex items-center gap-2 w-full truncate">
         <span class="text-base text-orange-400">🌡️</span>
         <div>
           <div class="text-[9px] text-gray-500 font-bold uppercase leading-none">Nhiệt độ</div>
           <div class="text-xs font-bold text-white mt-0.5">{{ sensors.temperature !== null ? sensors.temperature.toFixed(1) + '°C' : '--' }}</div>
         </div>
       </div>
-      <div class="flex items-center gap-2 border-l border-gray-800/60 pl-2">
+      <div class="flex items-center gap-2 border-l border-gray-800/60 pl-2 w-full truncate">
         <span class="text-base text-cyan-400">💧</span>
         <div>
           <div class="text-[9px] text-gray-500 font-bold uppercase leading-none">Độ ẩm</div>
           <div class="text-xs font-bold text-white mt-0.5">{{ sensors.humidity !== null ? sensors.humidity.toFixed(1) + '%' : '--' }}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 border-l border-gray-800/60 pl-2 w-full truncate">
+        <span class="text-base" :class="sensors.motion ? 'text-red-400 animate-pulse' : 'text-gray-400'">
+          {{ sensors.motion ? '🚶' : '👤' }}
+        </span>
+        <div>
+          <div class="text-[9px] text-gray-500 font-bold uppercase leading-none">Chuyển động</div>
+          <div 
+            class="text-[9px] font-bold mt-0.5" 
+            :class="sensors.motion ? 'text-red-400' : 'text-gray-400'"
+          >
+            {{ sensors.motion ? 'CÓ NGƯỜI' : 'TRỐNG' }}
+          </div>
         </div>
       </div>
     </div>
@@ -259,7 +273,7 @@ const props = defineProps({
   },
   sensors: {
     type: Object,
-    default: () => ({ temperature: null, humidity: null })
+    default: () => ({ temperature: null, humidity: null, motion: false })
   },
   autoFanEnabled: {
     type: Boolean,
