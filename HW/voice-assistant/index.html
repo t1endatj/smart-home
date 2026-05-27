@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Home Voice Assistant</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 247, 0.92);
+      --ink: #1f2a2e;
+      --muted: #66757b;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --line: rgba(31, 42, 46, 0.12);
+      --warn: #b45309;
+      --ok: #166534;
+      --shadow: 0 20px 50px rgba(32, 41, 46, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(180, 83, 9, 0.14), transparent 30%),
+        linear-gradient(135deg, #f8f3ea 0%, #edf6f2 100%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(880px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      padding: 28px 28px 18px;
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.92), rgba(17, 94, 89, 0.9));
+      color: #f4fffd;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      max-width: 60ch;
+      color: rgba(244, 255, 253, 0.84);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .content {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #effffc;
+    }
+
+    .primary.listening {
+      background: #b91c1c;
+    }
+
+    .secondary {
+      background: rgba(15, 118, 110, 0.1);
+      color: var(--accent-strong);
+    }
+
+    .status {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(15, 118, 110, 0.08);
+      color: var(--accent-strong);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+    .label {
+      display: inline-block;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .value {
+      margin: 0;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .commands {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 34px;
+    }
+
+    .chip {
+      min-width: 34px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(17, 94, 89, 0.12);
+      color: var(--accent-strong);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .hint {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .ok {
+      color: var(--ok);
+    }
+
+    .warn {
+      color: var(--warn);
+    }
+
+    @media (max-width: 640px) {
+      .hero,
+      .content {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <h1>Dieu khien nha bang giong noi</h1>
+      <p>
+        Trang se tu dong nghe lenh tieng Viet, nhan dang giong noi va gui van ban sang
+        `POST /llm` de suy ra lenh ESP32.
+      </p>
+    </section>
+
+    <section class="content">
+      <div class="controls">
+        <button id="listenBtn" class="primary" type="button">Tam dung nghe</button>
+        <button id="sendBtn" class="secondary" type="button">Gui lai transcript</button>
+      </div>
+
+      <div id="status" class="status">Dang khoi tao che do nghe tu dong...</div>
+
+      <div class="grid">
+        <article class="card">
+          <span class="label">Transcript</span>
+          <p id="transcript" class="value muted">Chua co noi dung.</p>
+        </article>
+
+        <article class="card">
+          <span class="label">Phan hoi AI</span>
+          <p id="reply" class="value muted">Chua co phan hoi.</p>
+        </article>
+      </div>
+
+      <article class="card">
+        <span class="label">Lenh ESP32</span>
+        <div id="commands" class="commands">
+          <span class="muted">Chua co lenh.</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <span class="label">Goi y</span>
+        <p class="hint">
+          Thu noi: "bat den phong khach", "toi di ngu", "mo cua va bat den hanh lang".
+          Trang nay can Chrome hoac Edge co ho tro Web Speech API.
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const listenBtn = document.getElementById("listenBtn");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusEl = document.getElementById("status");
+    const transcriptEl = document.getElementById("transcript");
+    const replyEl = document.getElementById("reply");
+    const commandsEl = document.getElementById("commands");
+
+    let recognition = null;
+    let listening = false;
+    let autoListenEnabled = true;
+    let restartTimer = null;
+    let finalTranscript = "";
+
+    function setStatus(message, kind = "default") {
+      statusEl.textContent = message;
+      statusEl.className = "status";
+      if (kind === "ok") statusEl.classList.add("ok");
+      if (kind === "warn") statusEl.classList.add("warn");
+    }
+
+    function renderTranscript(text) {
+      transcriptEl.textContent = text || "Chua co noi dung.";
+      transcriptEl.classList.toggle("muted", !text);
+    }
+
+    function renderReply(text) {
+      replyEl.textContent = text || "Chua co phan hoi.";
+      replyEl.classList.toggle("muted", !text);
+    }
+
+    function renderCommands(commands) {
+      commandsEl.innerHTML = "";
+      if (!Array.isArray(commands) || commands.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "muted";
+        empty.textContent = "Khong co lenh.";
+        commandsEl.appendChild(empty);
+        return;
+      }
+
+      commands.forEach((command) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = command;
+        commandsEl.appendChild(chip);
+      });
+    }
+
+    async function sendTranscript(text) {
+      if (!text) {
+        setStatus("Chua co transcript de gui.", "warn");
+        return;
+      }
+
+      setStatus("Dang gui lenh sang server...");
+      sendBtn.disabled = true;
+
+      try {
+        const response = await fetch("/llm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || "Khong goi duoc /llm");
+        }
+
+        renderReply(data.reply || "");
+        renderCommands(data.commands || []);
+        setStatus("Da gui va nhan phan hoi tu server.", "ok");
+      } catch (error) {
+        renderReply("");
+        renderCommands([]);
+        setStatus(error.message || "Co loi khi gui transcript.", "warn");
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    function clearRestartTimer() {
+      if (restartTimer) {
+        window.clearTimeout(restartTimer);
+        restartTimer = null;
+      }
+    }
+
+    function scheduleRestart(delay = 600) {
+      if (!autoListenEnabled || !recognition || listening) {
+        return;
+      }
+
+      clearRestartTimer();
+      restartTimer = window.setTimeout(() => {
+        startListening();
+      }, delay);
+    }
+
+    function stopListening() {
+      autoListenEnabled = false;
+      clearRestartTimer();
+      if (recognition && listening) {
+        recognition.stop();
+      } else {
+        listenBtn.textContent = "Bat lai nghe";
+        listenBtn.classList.remove("listening");
+        setStatus("Da tam dung nghe tu dong.");
+      }
+    }
+
+    function startListening() {
+      if (!recognition) {
+        setStatus("Trinh duyet nay khong ho tro nhan dien giong noi.", "warn");
+        return;
+      }
+
+      if (listening) {
+        return;
+      }
+
+      finalTranscript = "";
+      renderTranscript("");
+      try {
+        recognition.start();
+      } catch (error) {
+        scheduleRestart(1200);
+      }
+    }
+
+    function enableAutoListening() {
+      autoListenEnabled = true;
+      listenBtn.textContent = "Tam dung nghe";
+      setStatus("Dang bat che do nghe tu dong...");
+      startListening();
+    }
+
+    if (!SpeechRecognition) {
+      listenBtn.disabled = true;
+      sendBtn.disabled = true;
+      setStatus("Web Speech API khong duoc ho tro tren trinh duyet nay.", "warn");
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.lang = "vi-VN";
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        listening = true;
+        clearRestartTimer();
+        listenBtn.textContent = "Tam dung nghe";
+        listenBtn.classList.add("listening");
+        setStatus("Dang nghe tu dong... hay noi lenh cua ban.");
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = "";
+        let committedTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          const phrase = event.results[i][0].transcript.trim();
+          if (event.results[i].isFinal) {
+            committedTranscript += `${phrase} `;
+          } else {
+            interimTranscript += `${phrase} `;
+          }
+        }
+
+        if (committedTranscript) {
+          finalTranscript = `${finalTranscript} ${committedTranscript}`.trim();
+        }
+
+        renderTranscript((finalTranscript || interimTranscript).trim());
+      };
+
+      recognition.onerror = (event) => {
+        listening = false;
+        listenBtn.classList.remove("listening");
+
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          autoListenEnabled = false;
+          listenBtn.textContent = "Bat lai nghe";
+          setStatus("Trinh duyet chua duoc cap quyen microphone.", "warn");
+          return;
+        }
+
+        listenBtn.textContent = autoListenEnabled ? "Tam dung nghe" : "Bat lai nghe";
+        setStatus(`Loi nhan dien giong noi: ${event.error}`, "warn");
+        if (autoListenEnabled) {
+          scheduleRestart(1200);
+        }
+      };
+
+      recognition.onend = async () => {
+        const transcript = finalTranscript.trim();
+        listening = false;
+        listenBtn.classList.remove("listening");
+        listenBtn.textContent = autoListenEnabled ? "Tam dung nghe" : "Bat lai nghe";
+
+        if (!transcript) {
+          if (autoListenEnabled) {
+            setStatus("Dang cho ban noi...");
+            scheduleRestart(300);
+          } else {
+            setStatus("Da tam dung nghe tu dong.");
+            renderTranscript("");
+          }
+          return;
+        }
+
+        renderTranscript(transcript);
+        await sendTranscript(transcript);
+        finalTranscript = "";
+        if (autoListenEnabled) {
+          setStatus("Da xu ly xong. Dang quay lai che do nghe...");
+          scheduleRestart(500);
+        }
+      };
+
+      window.addEventListener("load", () => {
+        enableAutoListening();
+      });
+    }
+
+    listenBtn.addEventListener("click", () => {
+      if (autoListenEnabled) {
+        stopListening();
+        return;
+      }
+      enableAutoListening();
+    });
+
+    sendBtn.addEventListener("click", () => {
+      sendTranscript(finalTranscript.trim() || transcriptEl.textContent.trim());
+    });
+  </script>
+</body>
+</html>
