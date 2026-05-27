@@ -147,7 +147,10 @@ async function toggleDevice(name, source = 'UI Panel') {
   // Add locally to the Console log monitor
   logToConsole(name, isON, source)
 
-  // Send request to API backend
+  // Lights are FE-only (no BE call)
+  if (name.startsWith('Đèn')) return
+
+  // Send request to API backend (fans/doors)
   try {
     const apiDeviceKey = mapDeviceToApiKey(name)
     await axios.post(`${API}/api/control`, {
