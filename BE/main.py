@@ -45,9 +45,10 @@ VALID_DEVICE_NAMES = {
 }
 
 AI_SYSTEM_PROMPT = """
-Bạn là trợ lý điều khiển nhà thông minh bằng tiếng Việt.
-Nhiệm vụ: chuyển yêu cầu người dùng thành các hành động điều khiển thiết bị trong dashboard.
-Chỉ trả về JSON hợp lệ, không markdown, không giải thích dài dòng.
+Bạn là bộ não điều phối nhà thông minh bằng tiếng Việt.
+Nhiệm vụ của bạn là đọc yêu cầu người dùng cùng trạng thái nhà hiện tại, rồi suy ra các hành động hợp lý, an toàn, tiết kiệm thao tác.
+Bạn phải ưu tiên an toàn trước, sau đó là tiện nghi và tính hợp lý theo ngữ cảnh.
+Chỉ trả về JSON hợp lệ, không markdown, không thêm chữ ngoài JSON.
 
 Danh sách thiết bị hợp lệ (đúng chính tả):
 - Đèn Hành Lang
@@ -67,8 +68,27 @@ Danh sách thiết bị hợp lệ (đúng chính tả):
 
 Quy ước:
 - status=true nghĩa là BẬT/MỞ, status=false nghĩa là TẮT/ĐÓNG.
+- Chỉ trả về action cho những thay đổi thực sự cần thiết. Nếu thiết bị đã ở đúng trạng thái mong muốn thì không cần lặp lại.
+- Được phép suy luận từ ngữ cảnh và trạng thái nhà hiện tại, không cần bám đúng từng từ người dùng nói.
 - Nếu người dùng nói "tắt hết", "đi ngủ", "về nhà", có thể set scenario là: "alloff" | "sleep" | "welcome".
+- Nếu tình huống khẩn cấp như cháy, khói, gas, nguy hiểm: ưu tiên mở lối thoát, bật đèn cần thiết, bật quạt phù hợp, không khóa người trong nhà.
+- Nếu chủ về nhà: ưu tiên mở cửa chính nếu đang khóa, bật đèn hợp lý ở lối vào/phòng khách, có thể bật quạt phòng khách nếu phù hợp.
+- Nếu đi ngủ: ưu tiên khóa các cửa, tắt phần lớn đèn/quạt không cần thiết, có thể giữ đèn phòng ngủ hoặc quạt phòng ngủ nếu phù hợp.
 - Nếu không chắc chắn hoặc không liên quan nhà thông minh: actions=[] và scenario=null.
+
+Nguyên tắc suy luận quan trọng:
+- Không tạo tên thiết bị mới ngoài danh sách hợp lệ.
+- Không trả về action mâu thuẫn nhau cho cùng một thiết bị.
+- Không bật/tắt bừa bãi tất cả thiết bị nếu yêu cầu chỉ nhắm vào một khu vực.
+- Nếu câu nói mơ hồ, hãy ưu tiên hành động ít rủi ro hơn.
+- Nếu người dùng hỏi trạng thái hoặc hỏi tư vấn, có thể không cần action nhưng vẫn trả lời ngắn gọn dựa trên context.
+
+Ví dụ suy luận:
+- "Tôi về nhà" -> mở Cửa Chính, bật Đèn Hành Lang hoặc Đèn Chùm Trung Tâm nếu đang tắt.
+- "Tôi đi ngủ" -> khóa các cửa đang mở, tắt đèn không cần thiết, giữ Đèn Phòng Ngủ hoặc Quạt Phòng Ngủ nếu hợp lý.
+- "Có cháy ở bếp" -> mở Cửa Chính nếu cần thoát hiểm, bật Đèn Hành Lang/Đèn Nhà Bếp nếu tối, bật Quạt Nhà Bếp, không khóa cửa.
+- "Khói nhiều quá" -> ưu tiên an toàn, có thể dùng scenario "sos" nếu phù hợp.
+- "Phòng khách nóng" -> bật Quạt Trần Phòng Khách, chỉ thêm đèn nếu người dùng có ý cần sáng.
 
 Schema:
 {
@@ -77,6 +97,66 @@ Schema:
   "scenario": null
 }
 """.strip()
+
+def get_latest_sensor_snapshot() -> dict | None:
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        "SELECT temperature, humidity, pir, gas_ppm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+
+    return {
+        "temperature": row[0],
+        "humidity": row[1],
+        "pir": None if row[2] is None else bool(row[2]),
+        "gas_ppm": row[3],
+        "timestamp": row[4],
+    }
+
+
+def get_current_home_payload() -> dict | None:
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        "SELECT payload FROM home_state WHERE id = 1"
+    ).fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+
+    try:
+        return json.loads(row[0])
+    except Exception:
+        return None
+
+
+def build_ai_context_message(user_text: str) -> str:
+    home_payload = get_current_home_payload() or {}
+    latest_sensor = get_latest_sensor_snapshot()
+
+    device_states = home_payload.get("deviceStates", {})
+    recent_logs = home_payload.get("logs", [])
+    if isinstance(recent_logs, list):
+        recent_logs = recent_logs[-8:]
+    else:
+        recent_logs = []
+
+    context = {
+        "user_request": user_text,
+        "current_home_state": {
+            "deviceStates": device_states,
+            "recentLogs": recent_logs,
+            "latestSensor": latest_sensor,
+        },
+        "instruction": (
+            "Hãy suy luận dựa trên trạng thái hiện tại. "
+            "Chỉ trả về các action cần thay đổi so với trạng thái hiện tại."
+        ),
+    }
+    return json.dumps(context, ensure_ascii=False)
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -217,7 +297,7 @@ def ai_command(req: AICommandRequest):
 
     messages = [
         {"role": "system", "content": AI_SYSTEM_PROMPT},
-        {"role": "user", "content": user_text},
+        {"role": "user", "content": build_ai_context_message(user_text)},
     ]
 
     try:
