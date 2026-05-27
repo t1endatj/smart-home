@@ -100,7 +100,7 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const connected = ref(false)
 const aiLoading = ref(false)
-const sensors = ref({ temperature: null, humidity: null, motion: false })
+const sensors = ref({ temperature: null, humidity: null, motion: false, gasAlarm: false })
 const autoFanEnabled = ref(false)
 const autoFanThreshold = ref(32)
 const voiceListening = ref(false)
@@ -426,6 +426,7 @@ async function pingAPI() {
       sensors.value.temperature = res.data.temperature
       sensors.value.humidity = res.data.humidity
       sensors.value.motion = res.data.motion !== undefined ? res.data.motion : false
+      sensors.value.gasAlarm = res.data.gasAlarm !== undefined ? res.data.gasAlarm : false
     }
     connected.value = true
   } catch (err) {

@@ -51,7 +51,8 @@
     </div>
 
     <!-- Environment Sensors -->
-    <div class="grid grid-cols-3 gap-1 bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 text-xs">
+    <div class="grid grid-cols-2 gap-2 bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 text-xs">
+      <!-- Cột 1: Nhiệt độ -->
       <div class="flex items-center gap-2 w-full truncate">
         <span class="text-base text-orange-400">🌡️</span>
         <div>
@@ -59,6 +60,8 @@
           <div class="text-xs font-bold text-white mt-0.5">{{ sensors.temperature !== null ? sensors.temperature.toFixed(1) + '°C' : '--' }}</div>
         </div>
       </div>
+      
+      <!-- Cột 2: Độ ẩm -->
       <div class="flex items-center gap-2 border-l border-gray-800/60 pl-2 w-full truncate">
         <span class="text-base text-cyan-400">💧</span>
         <div>
@@ -66,7 +69,9 @@
           <div class="text-xs font-bold text-white mt-0.5">{{ sensors.humidity !== null ? sensors.humidity.toFixed(1) + '%' : '--' }}</div>
         </div>
       </div>
-      <div class="flex items-center gap-2 border-l border-gray-800/60 pl-2 w-full truncate">
+      
+      <!-- Cột 3: Chuyển động -->
+      <div class="flex items-center gap-2 border-t border-gray-800/40 pt-2 w-full truncate">
         <span class="text-base" :class="sensors.motion ? 'text-red-400 animate-pulse' : 'text-gray-400'">
           {{ sensors.motion ? '🚶' : '👤' }}
         </span>
@@ -77,6 +82,22 @@
             :class="sensors.motion ? 'text-red-400' : 'text-gray-400'"
           >
             {{ sensors.motion ? 'CÓ NGƯỜI' : 'TRỐNG' }}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Cột 4: Cảm biến Gas MQ2 -->
+      <div class="flex items-center gap-2 border-l border-gray-800/60 pl-2 border-t border-gray-800/40 pt-2 w-full truncate">
+        <span class="text-base" :class="sensors.gasAlarm ? 'text-red-500 animate-bounce' : 'text-gray-400'">
+          ⚠️
+        </span>
+        <div>
+          <div class="text-[9px] text-gray-500 font-bold uppercase leading-none">Khí Gas (MQ-2)</div>
+          <div 
+            class="text-[9px] font-bold mt-0.5" 
+            :class="sensors.gasAlarm ? 'text-red-500 font-extrabold' : 'text-green-500'"
+          >
+            {{ sensors.gasAlarm ? 'CẢNH BÁO!' : 'AN TOÀN' }}
           </div>
         </div>
       </div>
@@ -273,7 +294,7 @@ const props = defineProps({
   },
   sensors: {
     type: Object,
-    default: () => ({ temperature: null, humidity: null, motion: false })
+    default: () => ({ temperature: null, humidity: null, motion: false, gasAlarm: false })
   },
   autoFanEnabled: {
     type: Boolean,
