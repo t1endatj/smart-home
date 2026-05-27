@@ -122,6 +122,12 @@ const DEFAULT_DEVICE_STATES = {
 const deviceStates = ref({ ...DEFAULT_DEVICE_STATES })
 
 const logs = ref([])
+let nextSyncAllowedAt = 0
+let persistInFlight = false
+
+function lockStateSync(durationMs = 1800) {
+  nextSyncAllowedAt = Math.max(nextSyncAllowedAt, Date.now() + durationMs)
+}
 
 function applyHomeState(payload) {
   if (!payload || typeof payload !== 'object') return
@@ -134,6 +140,10 @@ function applyHomeState(payload) {
 }
 
 async function syncHomeState() {
+  if (aiLoading.value || persistInFlight || Date.now() < nextSyncAllowedAt) {
+    return
+  }
+
   try {
     const res = await axios.get(`${API}/api/state`)
     const payload = res?.data?.payload
@@ -150,10 +160,17 @@ async function persistHomeState() {
     logs: logs.value
   }
 
-  await axios.post(`${API}/api/state`, payload)
+  persistInFlight = true
+  try {
+    await axios.post(`${API}/api/state`, payload)
+    lockStateSync(800)
+  } finally {
+    persistInFlight = false
+  }
 }
 
 function schedulePersistHomeState() {
+  lockStateSync()
   clearTimeout(persistTimer)
   persistTimer = setTimeout(() => {
     persistHomeState().catch(() => {})
@@ -230,7 +247,8 @@ function mapDeviceToApiKey(name) {
 
 async function toggleDevice(name, source = 'UI Panel') {
   if (deviceStates.value[name] === undefined) return
-  
+
+  lockStateSync()
   deviceStates.value[name] = !deviceStates.value[name]
   const isON = deviceStates.value[name]
 
@@ -258,6 +276,7 @@ async function toggleDevice(name, source = 'UI Panel') {
 }
 
 function runScenario(type) {
+  lockStateSync(2500)
   if (type === 'welcome') {
     addLog('SYSTEM', 'Kịch bản: VỀ NHÀ', 'info')
     addLog('ALERT', 'Gửi thông báo: Bot Telegram', 'info')
@@ -307,7 +326,8 @@ function runScenario(type) {
 
 async function handleAICommand(command) {
   if (aiLoading.value) return
-  
+
+  lockStateSync(4000)
   aiLoading.value = true
   addLog('SYSTEM', `Đang gửi lệnh AI: "${command}"...`, 'info')
   
