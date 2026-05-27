@@ -304,7 +304,6 @@ function runScenario(type) {
   } 
   else if (type === 'sleep') {
     addLog('SYSTEM', 'Kịch bản: ĐI NGỦ', 'info')
-    addLog('ALERT', 'Kích hoạt an ninh đêm', 'success')
     ['Cửa Chính', 'Cửa Nhà Vệ Sinh', 'Cửa Phòng Ngủ', 'Cửa Nhà Bếp', 'Cửa Khu KT'].forEach(door => {
       if (deviceStates.value[door]) toggleDevice(door, 'Scenario Auto')
     })
