@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import sqlite3
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +25,8 @@ def init_db():
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             temperature REAL NOT NULL,
             humidity    REAL NOT NULL,
+            pir         INTEGER,
+            gas_ppm     REAL,
             timestamp   TEXT NOT NULL
         )
     """)
@@ -34,6 +37,17 @@ def init_db():
             updated_at TEXT NOT NULL
         )
     """)
+
+    # Backward-compatible migrations for older DB files.
+    try:
+        conn.execute("ALTER TABLE sensor_logs ADD COLUMN pir INTEGER")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE sensor_logs ADD COLUMN gas_ppm REAL")
+    except sqlite3.OperationalError:
+        pass
+
     conn.commit()
     conn.close()
 
@@ -42,30 +56,52 @@ init_db()
 class SensorData(BaseModel):
     temperature: float
     humidity: float
+    pir: Optional[bool] = None
+    gas_ppm: Optional[float] = None
 
 @app.post("/api/sensor")
 def receive_sensor(data: SensorData):
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
-        "INSERT INTO sensor_logs (temperature, humidity, timestamp) VALUES (?, ?, ?)",
-        (data.temperature, data.humidity, ts)
+        "INSERT INTO sensor_logs (temperature, humidity, pir, gas_ppm, timestamp) VALUES (?, ?, ?, ?, ?)",
+        (
+            data.temperature,
+            data.humidity,
+            None if data.pir is None else int(bool(data.pir)),
+            data.gas_ppm,
+            ts,
+        )
     )
     conn.commit()
     conn.close()
-    print(f"[{ts}] Nhiet do: {data.temperature}°C  |  Do am: {data.humidity}%")
-    return {"status": "ok", "timestamp": ts}
+    print(
+        f"[{ts}] Nhiet do: {data.temperature}°C  |  Do am: {data.humidity}%"
+        f"  |  PIR: {data.pir}  |  Gas: {data.gas_ppm}"
+    )
+    return {
+        "status": "ok",
+        "timestamp": ts,
+        "pir": data.pir,
+        "gas_ppm": data.gas_ppm,
+    }
 
 @app.get("/api/sensor")
 def get_sensor(limit: int = 20):
     conn = sqlite3.connect(DB_PATH)
     rows = conn.execute(
-        "SELECT temperature, humidity, timestamp FROM sensor_logs ORDER BY id DESC LIMIT ?",
+        "SELECT temperature, humidity, pir, gas_ppm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT ?",
         (limit,)
     ).fetchall()
     conn.close()
     return [
-        {"temperature": r[0], "humidity": r[1], "timestamp": r[2]}
+        {
+            "temperature": r[0],
+            "humidity": r[1],
+            "pir": None if r[2] is None else bool(r[2]),
+            "gas_ppm": r[3],
+            "timestamp": r[4],
+        }
         for r in rows
     ]
 
@@ -73,12 +109,18 @@ def get_sensor(limit: int = 20):
 def get_latest():
     conn = sqlite3.connect(DB_PATH)
     row = conn.execute(
-        "SELECT temperature, humidity, timestamp FROM sensor_logs ORDER BY id DESC LIMIT 1"
+        "SELECT temperature, humidity, pir, gas_ppm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT 1"
     ).fetchone()
     conn.close()
     if row is None:
         return {"message": "Chưa có dữ liệu"}
-    return {"temperature": row[0], "humidity": row[1], "timestamp": row[2]}
+    return {
+        "temperature": row[0],
+        "humidity": row[1],
+        "pir": None if row[2] is None else bool(row[2]),
+        "gas_ppm": row[3],
+        "timestamp": row[4],
+    }
 
 class ControlData(BaseModel):
     device: str

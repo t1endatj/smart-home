@@ -1,2 +1,4 @@
 libraries/
 .vscode/
+venv/
+__pycache__/

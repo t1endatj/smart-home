@@ -54,7 +54,7 @@ import axios from 'axios'
 import ControlPanel from './components/ControlPanel.vue'
 import SmartHome3D from './components/SmartHome3D.vue'
 
-const API = 'http://localhost:8000'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const connected = ref(false)
 const aiLoading = ref(false)
