@@ -1,8 +1,10 @@
+import asyncio
 from datetime import datetime
 import json
 import os
 import re
 import sqlite3
+import threading
 from typing import Optional
 
 import httpx
@@ -10,6 +12,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from websockets.asyncio.server import serve
+from websockets.exceptions import ConnectionClosed
 
 app = FastAPI(title="Smart Home API")
 
@@ -27,6 +31,8 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 GROK_API_URL = os.environ.get("GROK_API_URL") or os.environ.get("XAI_API_URL") or "https://api.x.ai/v1/chat/completions"
 GROK_MODEL = os.environ.get("GROK_MODEL") or os.environ.get("XAI_MODEL") or "grok-4-1-fast-non-reasoning"
 GROK_API_KEY = os.environ.get("GROK_API_KEY") or os.environ.get("XAI_API_KEY") or ""
+WS_HOST = os.environ.get("WS_HOST", "0.0.0.0")
+WS_PORT = int(os.environ.get("WS_PORT", "8765"))
 
 VALID_DEVICE_NAMES = {
     "Đèn Hành Lang",
@@ -102,6 +108,102 @@ Schema:
   "scenario": null
 }
 """.strip()
+
+
+class WebSocketBroadcastServer:
+    def __init__(self, host: str, port: int):
+        self.host = host
+        self.port = port
+        self.clients = set()
+        self.loop = None
+        self.thread = None
+        self.started = threading.Event()
+
+    async def _broadcast(self, message: str):
+        stale_clients = []
+        for client in list(self.clients):
+            try:
+                await client.send(message)
+            except ConnectionClosed:
+                stale_clients.append(client)
+            except Exception:
+                stale_clients.append(client)
+
+        for client in stale_clients:
+            self.clients.discard(client)
+
+    async def _emit_event(self, event: str, data: dict):
+        payload = {
+            "event": event,
+            "timestamp": datetime.now().isoformat(timespec="milliseconds"),
+            "data": data,
+        }
+        await self._broadcast(json.dumps(payload, ensure_ascii=False))
+
+    async def _handle_client(self, websocket):
+        self.clients.add(websocket)
+        await self._emit_event(
+            "ws.client_joined",
+            {"clients": len(self.clients)},
+        )
+        try:
+            async for raw_message in websocket:
+                try:
+                    parsed = json.loads(raw_message)
+                except json.JSONDecodeError:
+                    parsed = {"message": raw_message}
+
+                event = str(parsed.get("event") or "ws.client_message")
+                data = parsed.get("data")
+                if not isinstance(data, dict):
+                    data = {"payload": parsed}
+
+                await self._emit_event(
+                    event,
+                    {
+                        **data,
+                        "clients": len(self.clients),
+                    },
+                )
+        finally:
+            self.clients.discard(websocket)
+            await self._emit_event(
+                "ws.client_left",
+                {"clients": len(self.clients)},
+            )
+
+    async def _run_server(self):
+        async with serve(self._handle_client, self.host, self.port):
+            self.started.set()
+            await asyncio.Future()
+
+    def _run_forever(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.loop.create_task(self._run_server())
+        self.loop.run_forever()
+
+    def start(self):
+        if self.thread and self.thread.is_alive():
+            return
+        self.thread = threading.Thread(target=self._run_forever, daemon=True)
+        self.thread.start()
+        self.started.wait(timeout=3)
+
+    def emit(self, event: str, data: dict):
+        if self.loop is None:
+            return
+        future = asyncio.run_coroutine_threadsafe(
+            self._emit_event(event, data),
+            self.loop,
+        )
+        try:
+            future.result(timeout=1)
+        except Exception:
+            pass
+
+
+ws_server = WebSocketBroadcastServer(WS_HOST, WS_PORT)
 
 def get_latest_sensor_snapshot() -> dict | None:
     conn = sqlite3.connect(DB_PATH)
@@ -266,6 +368,22 @@ def init_db():
 
 init_db()
 
+
+@app.on_event("startup")
+def start_websocket_server():
+    ws_server.start()
+
+
+def broadcast_home_state(payload: dict, revision: int, updated_at: str):
+    ws_server.emit(
+        "home_state.updated",
+        {
+            "payload": payload,
+            "revision": revision,
+            "updated_at": updated_at,
+        },
+    )
+
 class SensorData(BaseModel):
     temperature: float
     humidity: float
@@ -275,6 +393,13 @@ class SensorData(BaseModel):
 @app.post("/api/sensor")
 def receive_sensor(data: SensorData):
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sensor_payload = {
+        "temperature": data.temperature,
+        "humidity": data.humidity,
+        "pir": data.pir,
+        "gas_ppm": data.gas_ppm,
+        "timestamp": ts,
+    }
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
         "INSERT INTO sensor_logs (temperature, humidity, pir, gas_ppm, timestamp) VALUES (?, ?, ?, ?, ?)",
@@ -292,12 +417,8 @@ def receive_sensor(data: SensorData):
         f"[{ts}] Nhiet do: {data.temperature}°C  |  Do am: {data.humidity}%"
         f"  |  PIR: {data.pir}  |  Gas: {data.gas_ppm}"
     )
-    return {
-        "status": "ok",
-        "timestamp": ts,
-        "pir": data.pir,
-        "gas_ppm": data.gas_ppm,
-    }
+    ws_server.emit("sensor.updated", sensor_payload)
+    return {"status": "ok", **sensor_payload}
 
 @app.get("/api/sensor")
 def get_sensor(limit: int = 20):
@@ -342,6 +463,10 @@ class ControlData(BaseModel):
 @app.post("/api/control")
 def control_device(data: ControlData):
     print(f"Dieu khien: {data.device} -> {'BAT' if data.status else 'TAT'}")
+    ws_server.emit(
+        "control.command",
+        {"device": data.device, "status": data.status},
+    )
     return {"status": "ok", "device": data.device, "value": data.status}
 
 class AICommandRequest(BaseModel):
@@ -441,7 +566,8 @@ def get_home_state():
 @app.post("/api/state")
 def set_home_state(data: HomeStatePayload):
     ts = datetime.now().isoformat(timespec="milliseconds")
-    payload_json = json.dumps(data.model_dump(), ensure_ascii=False)
+    payload = data.model_dump()
+    payload_json = json.dumps(payload, ensure_ascii=False)
 
     conn = sqlite3.connect(DB_PATH)
     current_revision_row = conn.execute(
@@ -461,4 +587,5 @@ def set_home_state(data: HomeStatePayload):
     )
     conn.commit()
     conn.close()
+    broadcast_home_state(payload, next_revision, ts)
     return {"status": "ok", "updated_at": ts, "revision": next_revision}
