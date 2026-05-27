@@ -94,7 +94,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS home_state (
             id         INTEGER PRIMARY KEY CHECK (id = 1),
             payload    TEXT NOT NULL,
-            updated_at TEXT NOT NULL
+            updated_at TEXT NOT NULL,
+            revision   INTEGER NOT NULL DEFAULT 0
         )
     """)
 
@@ -105,6 +106,12 @@ def init_db():
         pass
     try:
         conn.execute("ALTER TABLE sensor_logs ADD COLUMN gas_ppm REAL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute(
+            "ALTER TABLE home_state ADD COLUMN revision INTEGER NOT NULL DEFAULT 0"
+        )
     except sqlite3.OperationalError:
         pass
 
@@ -270,35 +277,42 @@ class HomeStatePayload(BaseModel):
 def get_home_state():
     conn = sqlite3.connect(DB_PATH)
     row = conn.execute(
-        "SELECT payload, updated_at FROM home_state WHERE id = 1"
+        "SELECT payload, updated_at, revision FROM home_state WHERE id = 1"
     ).fetchone()
     conn.close()
 
     if row is None:
-        return {"payload": None, "updated_at": None}
+        return {"payload": None, "updated_at": None, "revision": 0}
 
-    payload_json, updated_at = row
+    payload_json, updated_at, revision = row
     try:
         payload = json.loads(payload_json)
     except Exception:
         payload = None
-    return {"payload": payload, "updated_at": updated_at}
+    return {"payload": payload, "updated_at": updated_at, "revision": revision}
 
 
 @app.post("/api/state")
 def set_home_state(data: HomeStatePayload):
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ts = datetime.now().isoformat(timespec="milliseconds")
     payload_json = json.dumps(data.model_dump(), ensure_ascii=False)
 
     conn = sqlite3.connect(DB_PATH)
+    current_revision_row = conn.execute(
+        "SELECT revision FROM home_state WHERE id = 1"
+    ).fetchone()
+    next_revision = (current_revision_row[0] if current_revision_row else 0) + 1
     conn.execute(
         """
-        INSERT INTO home_state (id, payload, updated_at)
-        VALUES (1, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET payload=excluded.payload, updated_at=excluded.updated_at
+        INSERT INTO home_state (id, payload, updated_at, revision)
+        VALUES (1, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            payload=excluded.payload,
+            updated_at=excluded.updated_at,
+            revision=excluded.revision
         """,
-        (payload_json, ts),
+        (payload_json, ts, next_revision),
     )
     conn.commit()
     conn.close()
-    return {"status": "ok", "updated_at": ts}
+    return {"status": "ok", "updated_at": ts, "revision": next_revision}
