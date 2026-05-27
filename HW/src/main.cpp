@@ -23,9 +23,12 @@ constexpr unsigned long WS_RECONNECT_INTERVAL_MS = 500;
 constexpr uint32_t WS_HEARTBEAT_INTERVAL_MS = 30000;
 constexpr uint32_t WS_HEARTBEAT_TIMEOUT_MS = 10000;
 constexpr uint8_t WS_HEARTBEAT_DISCONNECT_COUNT = 3;
+constexpr unsigned long SENSOR_SYNC_INTERVAL_MS = 5000;
 
 WebSocketsClient webSocket;
 bool webSocketReady = false;
+bool sendSensorSnapshotOnConnect = false;
+unsigned long lastSensorSyncMs = 0;
 
 void printHelp() {
   Serial.println();
@@ -121,6 +124,38 @@ void applyDeviceCommand(const char *key, bool status) {
   }
 }
 
+void sendSensorSnapshot() {
+  if (!webSocketReady) {
+    return;
+  }
+
+  ClimateData climate{};
+  if (!dhtSensorRead(climate)) {
+    Serial.println("Bo qua sensor sync: khong doc duoc DHT.");
+    return;
+  }
+
+  const bool motion = pirSensorRead();
+  const GasData gas = gasSensorRead();
+
+  JsonDocument doc;
+  doc["event"] = "sensor.sync";
+  JsonObject data = doc["data"].to<JsonObject>();
+  data["temperature"] = climate.temperature;
+  data["humidity"] = climate.humidity;
+  data["pir"] = motion;
+  data["gas_ppm"] = gas.analogValue;
+  data["gas_alarm"] = gas.digitalAlarm;
+
+  String payload;
+  serializeJson(doc, payload);
+  webSocket.sendTXT(payload);
+  lastSensorSyncMs = millis();
+
+  Serial.print("Da gui sensor sync: ");
+  Serial.println(payload);
+}
+
 void applySocketPayload(uint8_t *payload, size_t length) {
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, payload, length);
@@ -171,6 +206,7 @@ void onWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
       break;
     case WStype_CONNECTED:
       webSocketReady = true;
+      sendSensorSnapshotOnConnect = true;
       Serial.print("WebSocket da ket noi: ");
       Serial.println(reinterpret_cast<const char *>(payload));
       break;
@@ -423,6 +459,16 @@ void handleSocketCommands() {
     return;
   }
   webSocket.loop();
+  if (sendSensorSnapshotOnConnect && webSocketReady) {
+    sendSensorSnapshotOnConnect = false;
+    sendSensorSnapshot();
+    return;
+  }
+
+  const unsigned long now = millis();
+  if (webSocketReady && (lastSensorSyncMs == 0 || now - lastSensorSyncMs >= SENSOR_SYNC_INTERVAL_MS)) {
+    sendSensorSnapshot();
+  }
 }
 }
 
