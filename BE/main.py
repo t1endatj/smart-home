@@ -118,6 +118,8 @@ class WebSocketBroadcastServer:
         self.loop = None
         self.thread = None
         self.started = threading.Event()
+        self.server = None
+        self.stop_future = None
 
     async def _broadcast(self, message: str):
         stale_clients = []
@@ -173,22 +175,63 @@ class WebSocketBroadcastServer:
             )
 
     async def _run_server(self):
-        async with serve(self._handle_client, self.host, self.port):
-            self.started.set()
-            await asyncio.Future()
+        self.stop_future = self.loop.create_future()
+        self.server = await serve(self._handle_client, self.host, self.port)
+        self.started.set()
+        try:
+            await self.stop_future
+        finally:
+            self.server.close()
+            await self.server.wait_closed()
+            self.server = None
+            self.stop_future = None
 
     def _run_forever(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
-        self.loop.create_task(self._run_server())
-        self.loop.run_forever()
+        server_task = self.loop.create_task(self._run_server())
+        try:
+            self.loop.run_forever()
+        finally:
+            pending_tasks = [
+                task for task in asyncio.all_tasks(self.loop)
+                if task is not server_task and not task.done()
+            ]
+            for task in pending_tasks:
+                task.cancel()
+            if pending_tasks:
+                self.loop.run_until_complete(
+                    asyncio.gather(*pending_tasks, return_exceptions=True)
+                )
+            if not server_task.done():
+                server_task.cancel()
+                self.loop.run_until_complete(
+                    asyncio.gather(server_task, return_exceptions=True)
+                )
+            self.loop.close()
+            self.loop = None
 
     def start(self):
         if self.thread and self.thread.is_alive():
             return
+        self.started.clear()
         self.thread = threading.Thread(target=self._run_forever, daemon=True)
         self.thread.start()
         self.started.wait(timeout=3)
+
+    def stop(self):
+        if self.loop is None:
+            return
+
+        def shutdown():
+            if self.stop_future is not None and not self.stop_future.done():
+                self.stop_future.set_result(None)
+            self.loop.stop()
+
+        self.loop.call_soon_threadsafe(shutdown)
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=3)
+        self.thread = None
 
     def emit(self, event: str, data: dict):
         if self.loop is None:
@@ -372,6 +415,11 @@ init_db()
 @app.on_event("startup")
 def start_websocket_server():
     ws_server.start()
+
+
+@app.on_event("shutdown")
+def stop_websocket_server():
+    ws_server.stop()
 
 
 def broadcast_home_state(payload: dict, revision: int, updated_at: str):
