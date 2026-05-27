@@ -7,4 +7,10 @@ export default defineConfig({
     vue(),
     tailwindcss(),
   ],
+  server: {
+    allowedHosts: ['iot.caohoangphuc.id.vn'],
+  },
+  preview: {
+    allowedHosts: ['iot.caohoangphuc.id.vn'],
+  },
 })
