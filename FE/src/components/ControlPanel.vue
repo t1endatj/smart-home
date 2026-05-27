@@ -7,6 +7,49 @@
       </h3>
     </div>
 
+    <!-- Console Monitor -->
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <div class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.18em]">ESP32 Serial Monitor</div>
+        <div class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+          Live
+        </div>
+      </div>
+      <div
+        class="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.10),transparent_40%),linear-gradient(180deg,#11131a_0%,#0b0d12_100%)] shadow-[0_18px_40px_rgba(0,0,0,0.28)]"
+      >
+        <div class="flex items-center justify-between border-b border-white/6 px-4 py-3">
+          <div class="flex items-center gap-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(74,222,128,0.75)]" />
+            <span class="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/85">Telemetry Stream</span>
+          </div>
+          <span class="font-mono text-[10px] text-gray-500">{{ logs.length }} entries</span>
+        </div>
+        <div class="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-cyan-300/5 to-transparent" />
+        <div ref="consoleEl" class="max-h-[250px] min-h-[220px] overflow-y-auto px-4 py-3 font-mono text-[12px] leading-5">
+          <div v-if="logs.length === 0" class="rounded-xl border border-dashed border-white/8 bg-white/[0.02] px-4 py-8 text-center text-[12px] text-gray-500">
+            Waiting for serial events...
+          </div>
+          <div
+            v-for="(log, idx) in logs"
+            :key="idx"
+            class="mb-2 flex items-start gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
+          >
+            <span class="shrink-0 rounded-md bg-black/30 px-2 py-1 text-[11px] text-cyan-200/75">{{ log.time }}</span>
+            <span
+              :class="[
+                'shrink-0 rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-wide',
+                logTagClass(log)
+              ]"
+            >
+              {{ log.tag }}
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal break-words text-[12px] font-medium text-gray-100/90">{{ log.msg }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Scenarios -->
     <div class="flex flex-col gap-1.5">
       <div class="grid grid-cols-4 gap-1.5">
@@ -106,39 +149,6 @@
       </div>
     </div>
 
-    <!-- Console Monitor -->
-    <div class="flex flex-col gap-1.5 mt-0.5">
-      <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">📟 ESP32 Serial Monitor</div>
-      <div 
-        ref="consoleEl" 
-        class="bg-[#0f0f14] border border-gray-800/80 rounded-lg h-[90px] overflow-y-auto font-mono text-[10px] p-2.5 shadow-inner flex flex-col gap-1.5"
-      >
-        <div v-if="logs.length === 0" class="text-gray-500">[System initialization...]</div>
-        <div 
-          v-for="(log, idx) in logs" 
-          :key="idx" 
-          class="flex items-start gap-2.5 leading-none"
-        >
-          <span class="text-gray-600 select-none shrink-0">{{ log.time }}</span>
-          <span 
-            :class="[
-              'font-bold shrink-0 min-w-[55px] text-left',
-              log.tag === 'ALERT' ? 'text-red-500' : '',
-              log.tag === 'MQ2' ? (log.type === 'danger' ? 'text-red-500' : 'text-green-500') : '',
-              log.tag === 'RELAY' ? 'text-amber-500' : '',
-              log.tag === 'FAN' ? 'text-green-500' : '',
-              log.tag === 'LIGHT' ? 'text-yellow-500' : '',
-              log.tag === 'DOOR' ? 'text-emerald-500' : '',
-              log.tag === 'SYSTEM' ? 'text-purple-400' : ''
-            ]"
-          >
-            [{{ log.tag }}]
-          </span>
-          <span class="text-gray-300 font-medium truncate flex-1 text-left">{{ log.msg }}</span>
-        </div>
-      </div>
-    </div>
-
     <!-- AI Command Input -->
     <div class="flex flex-col gap-1 border-t border-gray-800/40 pt-2 mt-0.5">
       <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">🤖 Trợ lý AI</div>
@@ -197,11 +207,12 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log'])
+const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log', 'voice-state'])
 
 const commandText = ref('')
 const isListening = ref(false)
 const speechSupported = ref(false)
+const liveTranscript = ref('')
 let recognition = null
 
 // Initialize SpeechRecognition if browser supported
@@ -212,18 +223,38 @@ if (typeof window !== 'undefined') {
     recognition = new SpeechRecognition()
     recognition.continuous = false
     recognition.lang = 'vi-VN'
-    recognition.interimResults = false
+    recognition.interimResults = true
     recognition.maxAlternatives = 1
 
     recognition.onstart = () => {
       isListening.value = true
+      liveTranscript.value = ''
+      emit('voice-state', { isListening: true, transcript: '', supported: true })
       emit('add-log', { tag: 'SYSTEM', msg: 'Đang lắng nghe giọng nói...', type: 'info' })
     }
 
     recognition.onresult = (event) => {
-      const resultText = event.results[0][0].transcript
-      if (resultText) {
-        commandText.value = resultText.trim()
+      let interimTranscript = ''
+      let finalTranscript = ''
+
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const phrase = event.results[index][0].transcript.trim()
+        if (event.results[index].isFinal) {
+          finalTranscript = `${finalTranscript} ${phrase}`.trim()
+        } else {
+          interimTranscript = `${interimTranscript} ${phrase}`.trim()
+        }
+      }
+
+      liveTranscript.value = finalTranscript || interimTranscript
+      emit('voice-state', {
+        isListening: true,
+        transcript: liveTranscript.value,
+        supported: true
+      })
+
+      if (finalTranscript) {
+        commandText.value = finalTranscript
         emit('add-log', { tag: 'SYSTEM', msg: `Nhận diện: "${commandText.value}"`, type: 'success' })
         submitCommand()
       }
@@ -238,17 +269,21 @@ if (typeof window !== 'undefined') {
       } else if (event.error === 'no-speech') {
         msg = 'Lỗi: Không nghe thấy giọng nói.'
       }
+      emit('voice-state', { isListening: false, transcript: '', supported: true })
       emit('add-log', { tag: 'SYSTEM', msg, type: 'danger' })
     }
 
     recognition.onend = () => {
       isListening.value = false
+      liveTranscript.value = ''
+      emit('voice-state', { isListening: false, transcript: '', supported: true })
     }
   }
 }
 
 function toggleVoiceRecognition() {
   if (!recognition) {
+    emit('voice-state', { isListening: false, transcript: '', supported: false })
     emit('add-log', {
       tag: 'SYSTEM',
       msg: 'Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy thử Chrome hoặc Edge.',
@@ -261,6 +296,7 @@ function toggleVoiceRecognition() {
     recognition.stop()
   } else {
     commandText.value = ''
+    liveTranscript.value = ''
     try {
       recognition.start()
     } catch (e) {
@@ -273,6 +309,17 @@ function submitCommand() {
   if (!commandText.value.trim() || props.aiLoading) return
   emit('ai-command', commandText.value.trim())
   commandText.value = ''
+}
+
+function logTagClass(log) {
+  if (log.tag === 'ALERT') return 'bg-red-500/15 text-red-300'
+  if (log.tag === 'MQ2') return log.type === 'danger' ? 'bg-red-500/15 text-red-300' : 'bg-emerald-500/15 text-emerald-300'
+  if (log.tag === 'RELAY') return 'bg-amber-500/15 text-amber-300'
+  if (log.tag === 'FAN') return 'bg-cyan-500/15 text-cyan-300'
+  if (log.tag === 'LIGHT') return 'bg-yellow-500/15 text-yellow-300'
+  if (log.tag === 'DOOR') return 'bg-green-500/15 text-green-300'
+  if (log.tag === 'SYSTEM') return 'bg-violet-500/15 text-violet-300'
+  return 'bg-white/10 text-gray-300'
 }
 
 

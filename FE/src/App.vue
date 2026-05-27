@@ -1,7 +1,34 @@
 <template>
   <div class="min-h-screen bg-[#111113] text-gray-200">
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="voiceOverlayVisible"
+        class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-[#06070b]/42 backdrop-blur-md"
+      >
+        <div class="mx-6 w-full max-w-3xl rounded-[28px] border border-cyan-300/18 bg-[linear-gradient(180deg,rgba(13,18,27,0.94)_0%,rgba(8,12,18,0.96)_100%)] px-8 py-10 shadow-[0_30px_80px_rgba(0,0,0,0.42)]">
+          <div class="mb-4 flex items-center justify-center gap-3">
+            <span class="h-3 w-3 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.95)] animate-pulse" />
+            <span class="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100/75">Voice Capture Active</span>
+          </div>
+          <p class="mb-4 text-center text-sm text-gray-400">Transcript đang được ghi nhận trực tiếp từ microphone</p>
+          <div class="min-h-[140px] rounded-[24px] border border-white/8 bg-white/[0.03] px-6 py-8">
+            <p class="text-center text-3xl font-medium leading-relaxed text-white md:text-4xl">
+              {{ voiceTranscript || 'Hãy nói lệnh của bạn...' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- Navbar -->
-    <nav class="bg-[#18181c] border-b border-gray-800/40 px-6 py-4 flex items-center justify-between">
+    <nav :class="voiceListening ? 'blur-sm scale-[0.995]' : ''" class="bg-[#18181c] border-b border-gray-800/40 px-6 py-4 flex items-center justify-between transition duration-300">
       <div class="flex items-center gap-2">
         <span class="text-2xl">🏠</span>
         <span class="text-lg font-semibold text-white">Smart Home Dashboard</span>
@@ -18,7 +45,7 @@
     </nav>
 
     <!-- Grid Content Layout -->
-    <div class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-100px)] lg:min-h-[500px]">
+    <div :class="voiceListening ? 'blur-md scale-[0.985]' : ''" class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-100px)] lg:min-h-[500px] transition duration-300">
       
       <!-- Left Column: 3D Model -->
       <div class="lg:col-span-2 h-full flex flex-col">
@@ -40,6 +67,7 @@
           @scenario="runScenario"
           @ai-command="handleAICommand"
           @add-log="addLog($event.tag, $event.msg, $event.type)"
+          @voice-state="updateVoiceState"
           class="h-full"
         />
       </div>
@@ -49,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import axios from 'axios'
 import ControlPanel from './components/ControlPanel.vue'
 import SmartHome3D from './components/SmartHome3D.vue'
@@ -58,6 +86,10 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const connected = ref(false)
 const aiLoading = ref(false)
+const voiceListening = ref(false)
+const voiceTranscript = ref('')
+
+const voiceOverlayVisible = computed(() => voiceListening.value)
 
 // Shared states for all lights, fans and doors
 const DEFAULT_DEVICE_STATES = {
@@ -113,6 +145,11 @@ function addLog(tag, msg, type = 'info') {
   if (logs.value.length > 50) {
     logs.value.shift()
   }
+}
+
+function updateVoiceState(payload) {
+  voiceListening.value = Boolean(payload?.isListening)
+  voiceTranscript.value = typeof payload?.transcript === 'string' ? payload.transcript : ''
 }
 
 function logToConsole(device, state, source) {
