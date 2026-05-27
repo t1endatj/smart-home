@@ -66,6 +66,11 @@
   },
   {
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp",
+    "Include": "ArduinoJson.h",
+    "Includepath": "/home/phuchoangsrc/Arduino/libraries/ArduinoJson/src"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp",
     "Include": "WiFi.h",
     "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src"
   },
@@ -73,6 +78,16 @@
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp",
     "Include": "Network.h",
     "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp",
+    "Include": "WebSocketsClient.h",
+    "Includepath": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src"
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp",
+    "Include": "WiFiClientSecure.h",
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/NetworkClientSecure/src"
   },
   {
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp",
@@ -176,6 +191,51 @@
   },
   {
     "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkUdp.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src/SocketIOclient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src/WebSockets.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src/WebSocketsClient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src/WebSocketsServer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src/libb64/cdecode.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src/libb64/cencode.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/WebSockets/src/libsha1/libsha1.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/NetworkClientSecure/src/NetworkClientSecure.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/NetworkClientSecure/src/ssl_client.cpp",
     "Include": "",
     "Includepath": null
   },

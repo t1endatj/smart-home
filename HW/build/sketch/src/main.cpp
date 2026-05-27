@@ -1,7 +1,8 @@
 #line 1 "/tmp/Smart_Home_HardW-cli/Smart_Home_HardW/src/main.cpp"
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <WebSocketsClient.h>
 
 #include "DhtSensor.h"
 #include "DoorLock.h"
@@ -15,13 +16,14 @@
 namespace {
 constexpr char WIFI_SSID[] = "Wokwi-GUEST";
 constexpr char WIFI_PASSWORD[] = "";
-constexpr char COMMAND_SERVER_HOST[] = "host.wokwi.internal";
-constexpr uint16_t COMMAND_SERVER_PORT = 5001;
+constexpr char WS_HOST[] = "wss.caohoangphuc.id.vn";
+constexpr uint16_t WS_PORT = 443;
+constexpr char WS_PATH[] = "/";
 constexpr unsigned long WIFI_RETRY_DELAY_MS = 500;
-constexpr unsigned long SOCKET_RECONNECT_INTERVAL_MS = 3000;
+constexpr unsigned long WS_RECONNECT_INTERVAL_MS = 3000;
 
-WiFiClient commandSocket;
-unsigned long lastSocketConnectAttemptMs = 0;
+WebSocketsClient webSocket;
+bool webSocketReady = false;
 
 void printHelp() {
   Serial.println();
@@ -49,12 +51,12 @@ void printHelp() {
   Serial.println("  a : Auto 1 lan (DHT->quat PK, PIR->den PK, MQ2->quat bep)");
   Serial.println("  p : In trang thai");
   Serial.println();
-  Serial.println("Lenh qua server Python:");
-  Serial.print("  TCP: ");
-  Serial.print(COMMAND_SERVER_HOST);
+  Serial.println("Dong bo thiet bi qua WebSocket:");
+  Serial.print("  WSS: ");
+  Serial.print(WS_HOST);
   Serial.print(":");
-  Serial.println(COMMAND_SERVER_PORT);
-  Serial.println("  HTTP: POST /command {\"command\":\"1\"} hoac GET /send?cmd=1");
+  Serial.print(WS_PORT);
+  Serial.println(WS_PATH);
   Serial.println("-----------------------------------");
 }
 
@@ -89,29 +91,103 @@ void setupWifi() {
   Serial.println(WiFi.localIP());
 }
 
-void connectCommandSocket() {
-  if (WiFi.status() != WL_CONNECTED || commandSocket.connected()) {
-    return;
-  }
-
-  const unsigned long now = millis();
-  if (lastSocketConnectAttemptMs != 0 &&
-      now - lastSocketConnectAttemptMs < SOCKET_RECONNECT_INTERVAL_MS) {
-    return;
-  }
-  lastSocketConnectAttemptMs = now;
-
-  Serial.print("Dang ket noi command server ");
-  Serial.print(COMMAND_SERVER_HOST);
-  Serial.print(":");
-  Serial.println(COMMAND_SERVER_PORT);
-
-  if (commandSocket.connect(COMMAND_SERVER_HOST, COMMAND_SERVER_PORT)) {
-    Serial.println("Da ket noi command server.");
-    commandSocket.println("ESP32 Smart Home online");
+void applyDeviceCommand(const char *key, bool status) {
+  if (strcmp(key, "light_hallway") == 0) {
+    ledLightSet(LedId::Hall, status);
+  } else if (strcmp(key, "light_bedroom") == 0) {
+    ledLightSet(LedId::Bed, status);
+  } else if (strcmp(key, "light_toilet") == 0) {
+    ledLightSet(LedId::Wc, status);
+  } else if (strcmp(key, "light_livingroom") == 0) {
+    ledLightSet(LedId::Living, status);
+  } else if (strcmp(key, "light_kitchen") == 0) {
+    ledLightSet(LedId::Kitchen, status);
+  } else if (strcmp(key, "light_tech") == 0) {
+    ledLightSet(LedId::Tech, status);
+  } else if (strcmp(key, "fan_bedroom") == 0) {
+    fanMotorSet(FanId::Bed, status);
+  } else if (strcmp(key, "fan") == 0) {
+    fanMotorSet(FanId::Living, status);
+  } else if (strcmp(key, "fan_kitchen") == 0) {
+    fanMotorSet(FanId::Kitchen, status);
+  } else if (strncmp(key, "door", 4) == 0) {
+    // Current hardware has one door lock servo; all door keys map to it.
+    doorLockSet(status);
   } else {
-    Serial.println("Chua ket noi duoc command server.");
+    Serial.print("Bo qua key khong ho tro: ");
+    Serial.println(key);
   }
+}
+
+void applySocketPayload(uint8_t *payload, size_t length) {
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, payload, length);
+  if (error) {
+    Serial.print("JSON khong hop le: ");
+    Serial.println(error.c_str());
+    return;
+  }
+
+  const char *eventName = doc["event"];
+  if (!eventName || strcmp(eventName, "device.sync") != 0) {
+    return;
+  }
+
+  JsonArray commands = doc["data"]["commands"].as<JsonArray>();
+  if (commands.isNull()) {
+    Serial.println("Khong co commands trong payload.");
+    return;
+  }
+
+  const bool fullState = doc["data"]["full_state"] | false;
+  Serial.println(fullState ? "Nhan full_state tu server." : "Nhan delta state tu server.");
+
+  for (JsonObject command : commands) {
+    const char *key = command["key"];
+    const bool status = command["status"] | false;
+    if (!key) {
+      continue;
+    }
+    Serial.print("WS command -> ");
+    Serial.print(key);
+    Serial.print(": ");
+    Serial.println(status ? "BAT/MO" : "TAT/KHOA");
+    applyDeviceCommand(key, status);
+  }
+}
+
+void onWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
+  switch (type) {
+    case WStype_DISCONNECTED:
+      webSocketReady = false;
+      Serial.println("WebSocket da ngat ket noi.");
+      break;
+    case WStype_CONNECTED:
+      webSocketReady = true;
+      Serial.print("WebSocket da ket noi: ");
+      Serial.println(reinterpret_cast<const char *>(payload));
+      break;
+    case WStype_TEXT:
+      applySocketPayload(payload, length);
+      break;
+    case WStype_ERROR:
+      Serial.println("WebSocket gap loi.");
+      break;
+    default:
+      break;
+  }
+}
+
+void setupWebSocket() {
+  Serial.print("Dang ket noi WebSocket WSS: ");
+  Serial.print(WS_HOST);
+  Serial.print(":");
+  Serial.println(WS_PORT);
+
+  webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
+  webSocket.setReconnectInterval(WS_RECONNECT_INTERVAL_MS);
+  webSocket.enableHeartbeat(15000, 3000, 2);
+  webSocket.onEvent(onWebSocketEvent);
 }
 
 void readAndPrintDht() {
@@ -332,18 +408,11 @@ void handleSerialCommands() {
 }
 
 void handleSocketCommands() {
-  connectCommandSocket();
-
-  while (commandSocket.connected() && commandSocket.available()) {
-    const char cmd = static_cast<char>(commandSocket.read());
-    if (cmd == '\n' || cmd == '\r') {
-      continue;
-    }
-
-    Serial.print("Lenh socket: ");
-    Serial.println(cmd);
-    handleSerialCommand(cmd);
+  if (WiFi.status() != WL_CONNECTED) {
+    webSocketReady = false;
+    return;
   }
+  webSocket.loop();
 }
 }
 
@@ -351,7 +420,7 @@ void setup() {
   setupSerial();
   setupDevices();
   setupWifi();
-  connectCommandSocket();
+  setupWebSocket();
 
   Serial.println("=> San sang!");
   printHelp();

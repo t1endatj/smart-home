@@ -168,6 +168,9 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/freertos_stats.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/io_pin_remap.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Arduino.h \
+ /home/phuchoangsrc/Arduino/libraries/ArduinoJson/src/ArduinoJson.h \
+ /home/phuchoangsrc/Arduino/libraries/ArduinoJson/src/ArduinoJson.hpp \
+ /home/phuchoangsrc/Arduino/libraries/ArduinoJson/src/ArduinoJson/Configuration.hpp \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFi.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Print.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiType.h \
@@ -220,6 +223,101 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiServer.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiUdp.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkUdp.h \
+ /home/phuchoangsrc/Arduino/libraries/WebSockets/src/WebSocketsClient.h \
+ /home/phuchoangsrc/Arduino/libraries/WebSockets/src/WebSockets.h \
+ /home/phuchoangsrc/Arduino/libraries/WebSockets/src/WebSocketsVersion.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/NetworkClientSecure/src/WiFiClientSecure.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/NetworkClientSecure/src/NetworkClientSecure.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/NetworkClientSecure/src/ssl_client.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/platform.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/private_access.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/build_info.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/mbedtls/esp_config.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/mbedtls_config.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/esp_mem.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/config_psa.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_legacy.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_adjust_config_synonyms.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_adjust_config_dependencies.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/config_adjust_psa_superset_legacy.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/config_adjust_psa_from_legacy.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_adjust_config_key_pair_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_adjust_auto_enabled.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/config_adjust_legacy_crypto.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/config_adjust_x509.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/config_adjust_ssl.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/check_config.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/platform_time.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/net_sockets.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ssl.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/platform_util.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/mbedtls/bignum.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/bignum.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/mbedtls/ecp.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ecp.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ssl_ciphersuites.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/pk.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/md.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/rsa.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ecdsa.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_platform.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/build_info.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_values.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_sizes.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_struct.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_driver_contexts_primitives.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_driver_common.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_sizes.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_builtin_primitives.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/md5.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/md5_alt.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/md/esp_md.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_rom/include/esp_rom_md5.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ripemd160.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/sha1.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/sha1_alt.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/include/hal/sha_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_rom/esp32/include/esp32/rom/sha.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/sha256.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/sha256_alt.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/sha512.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/sha512_alt.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/sha3.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/cipher.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_driver_contexts_composites.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_builtin_composites.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/cmac.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/mbedtls/gcm.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/gcm.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/gcm_alt.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/aes/esp_aes_gcm.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/aes/esp_aes.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_common/include/esp_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/include/hal/aes_types.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ccm.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/chachapoly.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/poly1305.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/chacha20.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ecjpake.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_driver_contexts_key_derivation.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_builtin_key_derivation.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_extra.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/psa/crypto_compat.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/x509_crt.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/x509.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/asn1.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/x509_crl.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ecdh.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/debug.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/entropy.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/md.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/ctr_drbg.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/aes.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/port/include/aes_alt.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/entropy.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/mbedtls/mbedtls/include/mbedtls/error.h \
  /home/phuchoangsrc/smart-home/HW/build/sketch/src/DhtSensor.h \
  /home/phuchoangsrc/smart-home/HW/build/sketch/src/DoorLock.h \
  /home/phuchoangsrc/smart-home/HW/build/sketch/src/FanMotor.h \
