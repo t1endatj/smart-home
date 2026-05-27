@@ -10,7 +10,7 @@
     >
       <div
         v-if="voiceOverlayVisible"
-        class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-[#06070b]/42 backdrop-blur-md"
+        class="fixed inset-0 z-40 flex items-center justify-center bg-[#06070b]/42 backdrop-blur-md"
       >
         <div class="mx-6 w-full max-w-3xl rounded-[28px] border border-cyan-300/18 bg-[linear-gradient(180deg,rgba(13,18,27,0.94)_0%,rgba(8,12,18,0.96)_100%)] px-8 py-10 shadow-[0_30px_80px_rgba(0,0,0,0.42)]">
           <div class="mb-4 flex items-center justify-center gap-3">
@@ -22,6 +22,15 @@
             <p class="text-center text-3xl font-medium leading-relaxed text-white md:text-4xl">
               {{ voiceTranscript || 'Hãy nói lệnh của bạn...' }}
             </p>
+          </div>
+          <div class="mt-6 flex justify-center">
+            <button
+              type="button"
+              @click="requestVoiceStop"
+              class="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-6 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/18"
+            >
+              Xong
+            </button>
           </div>
         </div>
       </div>
@@ -63,6 +72,7 @@
           :deviceStates="deviceStates"
           :logs="logs"
           :aiLoading="aiLoading"
+          :voice-stop-request="voiceStopRequest"
           @toggle="toggleDevice($event, 'UI Switch')"
           @scenario="runScenario"
           @ai-command="handleAICommand"
@@ -88,6 +98,7 @@ const connected = ref(false)
 const aiLoading = ref(false)
 const voiceListening = ref(false)
 const voiceTranscript = ref('')
+const voiceStopRequest = ref(0)
 
 const voiceOverlayVisible = computed(() => voiceListening.value)
 
@@ -160,6 +171,10 @@ function addLog(tag, msg, type = 'info') {
 function updateVoiceState(payload) {
   voiceListening.value = Boolean(payload?.isListening)
   voiceTranscript.value = typeof payload?.transcript === 'string' ? payload.transcript : ''
+}
+
+function requestVoiceStop() {
+  voiceStopRequest.value += 1
 }
 
 function logToConsole(device, state, source) {
