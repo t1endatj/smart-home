@@ -204,6 +204,10 @@ const props = defineProps({
   aiLoading: {
     type: Boolean,
     default: false
+  },
+  voiceStopRequest: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -358,4 +362,10 @@ watch(() => props.logs, () => {
     }
   })
 }, { deep: true })
+
+watch(() => props.voiceStopRequest, () => {
+  if (recognition && isListening.value) {
+    recognition.stop()
+  }
+})
 </script>
