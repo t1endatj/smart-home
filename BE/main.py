@@ -159,13 +159,26 @@ class WebSocketBroadcastServer:
         }
         await self._broadcast(json.dumps(payload, ensure_ascii=False))
 
+    async def _send_event(self, websocket, event: str, data: dict):
+        payload = {
+            "event": event,
+            "timestamp": datetime.now().isoformat(timespec="milliseconds"),
+            "data": data,
+        }
+        await websocket.send(json.dumps(payload, ensure_ascii=False))
+
     async def _handle_client(self, websocket):
         self.clients.add(websocket)
-        await self._emit_event(
-            "ws.client_joined",
-            {"clients": len(self.clients)},
-        )
         try:
+            initial_payload = get_current_home_payload() or {}
+            await self._send_event(
+                websocket,
+                "device.sync",
+                {
+                    "commands": build_full_device_commands(initial_payload),
+                    "full_state": True,
+                },
+            )
             async for raw_message in websocket:
                 try:
                     parsed = json.loads(raw_message)
@@ -186,10 +199,6 @@ class WebSocketBroadcastServer:
                 )
         finally:
             self.clients.discard(websocket)
-            await self._emit_event(
-                "ws.client_left",
-                {"clients": len(self.clients)},
-            )
 
     async def _run_server(self):
         self.stop_future = self.loop.create_future()
@@ -476,6 +485,25 @@ def build_device_commands(previous_payload: dict, next_payload: dict) -> list[di
                 "device": device_name,
                 "key": DEVICE_API_KEYS.get(device_name, "unknown"),
                 "status": next_status,
+            }
+        )
+    return commands
+
+
+def build_full_device_commands(payload: dict) -> list[dict]:
+    device_states = payload.get("deviceStates", {})
+    if not isinstance(device_states, dict):
+        device_states = {}
+
+    commands = []
+    for device_name, status in device_states.items():
+        if device_name not in VALID_DEVICE_NAMES or not isinstance(status, bool):
+            continue
+        commands.append(
+            {
+                "device": device_name,
+                "key": DEVICE_API_KEYS.get(device_name, "unknown"),
+                "status": status,
             }
         )
     return commands
