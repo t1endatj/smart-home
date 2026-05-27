@@ -23,7 +23,7 @@ constexpr unsigned long WS_RECONNECT_INTERVAL_MS = 500;
 constexpr uint32_t WS_HEARTBEAT_INTERVAL_MS = 30000;
 constexpr uint32_t WS_HEARTBEAT_TIMEOUT_MS = 10000;
 constexpr uint8_t WS_HEARTBEAT_DISCONNECT_COUNT = 3;
-constexpr unsigned long SENSOR_SYNC_INTERVAL_MS = 5000;
+constexpr unsigned long SENSOR_SYNC_INTERVAL_MS = 1000;
 
 WebSocketsClient webSocket;
 bool webSocketReady = false;
