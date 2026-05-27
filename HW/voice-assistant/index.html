@@ -73,11 +73,35 @@
       gap: 18px;
     }
 
+    .tabs {
+      display: flex;
+      gap: 10px;
+    }
+
+    .tab {
+      background: rgba(15, 118, 110, 0.08);
+      color: var(--accent-strong);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #effffc;
+    }
+
     .controls {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
+    }
+
+    .panel {
+      display: none;
+      gap: 16px;
+    }
+
+    .panel.active {
+      display: grid;
     }
 
     button {
@@ -179,6 +203,24 @@
       line-height: 1.5;
     }
 
+    .chat-box {
+      width: 100%;
+      min-height: 132px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px 18px;
+      font: inherit;
+      color: var(--ink);
+      resize: vertical;
+      background: rgba(255, 255, 255, 0.9);
+      outline: none;
+    }
+
+    .chat-box:focus {
+      border-color: rgba(15, 118, 110, 0.35);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.08);
+    }
+
     .ok {
       color: var(--ok);
     }
@@ -206,19 +248,41 @@
     </section>
 
     <section class="content">
-      <div class="controls">
-        <button id="listenBtn" class="primary" type="button">Tam dung nghe</button>
-        <button id="sendBtn" class="secondary" type="button">Gui lai transcript</button>
+      <div class="tabs">
+        <button id="voiceTabBtn" class="tab active" type="button">Voice</button>
+        <button id="chatTabBtn" class="tab" type="button">Chat</button>
       </div>
 
       <div id="status" class="status">Dang khoi tao che do nghe tu dong...</div>
 
-      <div class="grid">
+      <section id="voicePanel" class="panel active">
+        <div class="controls">
+          <button id="listenBtn" class="primary" type="button">Tam dung nghe</button>
+          <button id="sendBtn" class="secondary" type="button">Gui lai transcript</button>
+        </div>
+
         <article class="card">
           <span class="label">Transcript</span>
           <p id="transcript" class="value muted">Chua co noi dung.</p>
         </article>
+      </section>
 
+      <section id="chatPanel" class="panel">
+        <article class="card">
+          <span class="label">Chat Command</span>
+          <textarea
+            id="chatInput"
+            class="chat-box"
+            placeholder="Nhap lenh, vi du: bat den phong khach va mo cua"
+          ></textarea>
+        </article>
+
+        <div class="controls">
+          <button id="chatSendBtn" class="primary" type="button">Gui lenh chat</button>
+        </div>
+      </section>
+
+      <div class="grid">
         <article class="card">
           <span class="label">Phan hoi AI</span>
           <p id="reply" class="value muted">Chua co phan hoi.</p>
@@ -245,8 +309,14 @@
   <script>
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+    const voiceTabBtn = document.getElementById("voiceTabBtn");
+    const chatTabBtn = document.getElementById("chatTabBtn");
+    const voicePanel = document.getElementById("voicePanel");
+    const chatPanel = document.getElementById("chatPanel");
     const listenBtn = document.getElementById("listenBtn");
     const sendBtn = document.getElementById("sendBtn");
+    const chatInput = document.getElementById("chatInput");
+    const chatSendBtn = document.getElementById("chatSendBtn");
     const statusEl = document.getElementById("status");
     const transcriptEl = document.getElementById("transcript");
     const replyEl = document.getElementById("reply");
@@ -293,6 +363,14 @@
       });
     }
 
+    function setActiveTab(tabName) {
+      const isVoice = tabName === "voice";
+      voiceTabBtn.classList.toggle("active", isVoice);
+      chatTabBtn.classList.toggle("active", !isVoice);
+      voicePanel.classList.toggle("active", isVoice);
+      chatPanel.classList.toggle("active", !isVoice);
+    }
+
     async function sendTranscript(text) {
       if (!text) {
         setStatus("Chua co transcript de gui.", "warn");
@@ -301,6 +379,7 @@
 
       setStatus("Dang gui lenh sang server...");
       sendBtn.disabled = true;
+      chatSendBtn.disabled = true;
 
       try {
         const response = await fetch("/llm", {
@@ -325,6 +404,7 @@
         setStatus(error.message || "Co loi khi gui transcript.", "warn");
       } finally {
         sendBtn.disabled = false;
+        chatSendBtn.disabled = false;
       }
     }
 
@@ -482,6 +562,33 @@
 
     sendBtn.addEventListener("click", () => {
       sendTranscript(finalTranscript.trim() || transcriptEl.textContent.trim());
+    });
+
+    chatSendBtn.addEventListener("click", () => {
+      const text = chatInput.value.trim();
+      if (!text) {
+        setStatus("Nhap lenh truoc khi gui chat.", "warn");
+        chatInput.focus();
+        return;
+      }
+      setActiveTab("chat");
+      renderTranscript(text);
+      sendTranscript(text);
+    });
+
+    chatInput.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        chatSendBtn.click();
+      }
+    });
+
+    voiceTabBtn.addEventListener("click", () => {
+      setActiveTab("voice");
+    });
+
+    chatTabBtn.addEventListener("click", () => {
+      setActiveTab("chat");
+      chatInput.focus();
     });
   </script>
 </body>
