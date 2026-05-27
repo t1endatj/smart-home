@@ -124,6 +124,8 @@ const deviceStates = ref({ ...DEFAULT_DEVICE_STATES })
 const logs = ref([])
 let nextSyncAllowedAt = 0
 let persistInFlight = false
+let latestAppliedRevision = 0
+let pendingLocalRevision = 0
 
 function lockStateSync(durationMs = 1800) {
   nextSyncAllowedAt = Math.max(nextSyncAllowedAt, Date.now() + durationMs)
@@ -147,7 +149,15 @@ async function syncHomeState() {
   try {
     const res = await axios.get(`${API}/api/state`)
     const payload = res?.data?.payload
-    if (payload) applyHomeState(payload)
+    const remoteRevision = Number(res?.data?.revision || 0)
+    if (!payload) {
+      return
+    }
+    if (remoteRevision <= latestAppliedRevision || remoteRevision < pendingLocalRevision) {
+      return
+    }
+    applyHomeState(payload)
+    latestAppliedRevision = remoteRevision
   } catch {
     // Ignore transient sync failures; connectivity is handled by pingAPI.
   }
@@ -162,8 +172,14 @@ async function persistHomeState() {
 
   persistInFlight = true
   try {
-    await axios.post(`${API}/api/state`, payload)
+    const res = await axios.post(`${API}/api/state`, payload)
+    const committedRevision = Number(res?.data?.revision || 0)
+    latestAppliedRevision = committedRevision
+    pendingLocalRevision = committedRevision
     lockStateSync(800)
+  } catch (error) {
+    pendingLocalRevision = latestAppliedRevision
+    throw error
   } finally {
     persistInFlight = false
   }
@@ -171,6 +187,7 @@ async function persistHomeState() {
 
 function schedulePersistHomeState() {
   lockStateSync()
+  pendingLocalRevision = latestAppliedRevision + 1
   clearTimeout(persistTimer)
   persistTimer = setTimeout(() => {
     persistHomeState().catch(() => {})
