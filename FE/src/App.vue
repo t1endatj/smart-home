@@ -425,8 +425,12 @@ async function pingAPI() {
     if (res.data && res.data.temperature !== undefined) {
       sensors.value.temperature = res.data.temperature
       sensors.value.humidity = res.data.humidity
-      sensors.value.motion = res.data.motion !== undefined ? res.data.motion : false
-      sensors.value.gasAlarm = res.data.gasAlarm !== undefined ? res.data.gasAlarm : false
+      sensors.value.motion = res.data.pir !== undefined
+        ? Boolean(res.data.pir)
+        : (res.data.motion !== undefined ? Boolean(res.data.motion) : false)
+      sensors.value.gasAlarm = res.data.gasAlarm !== undefined
+        ? Boolean(res.data.gasAlarm)
+        : (res.data.gas_alarm !== undefined ? Boolean(res.data.gas_alarm) : false)
     }
     connected.value = true
   } catch (err) {

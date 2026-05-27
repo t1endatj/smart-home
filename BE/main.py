@@ -189,16 +189,26 @@ class WebSocketBroadcastServer:
                 data = parsed.get("data")
                 if not isinstance(data, dict):
                     data = {"payload": parsed}
-
-                await self._emit_event(
-                    event,
-                    {
-                        **data,
-                        "clients": len(self.clients),
-                    },
-                )
+                await self._handle_incoming_event(event, data)
         finally:
             self.clients.discard(websocket)
+
+    async def _handle_incoming_event(self, event: str, data: dict):
+        if event == "sensor.sync":
+            sensor_payload = normalize_sensor_payload(data)
+            if sensor_payload is None:
+                return
+            store_sensor_data(sensor_payload)
+            await self._emit_event("sensor.updated", sensor_payload)
+            return
+
+        await self._emit_event(
+            event,
+            {
+                **data,
+                "clients": len(self.clients),
+            },
+        )
 
     async def _run_server(self):
         self.stop_future = self.loop.create_future()
@@ -291,6 +301,55 @@ def get_latest_sensor_snapshot() -> dict | None:
         "gas_ppm": row[3],
         "timestamp": row[4],
     }
+
+
+def normalize_sensor_payload(data: dict) -> dict | None:
+    try:
+        temperature = float(data["temperature"])
+        humidity = float(data["humidity"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+    pir = data.get("pir")
+    if pir is not None:
+        pir = bool(pir)
+
+    gas_value = data.get("gas_ppm")
+    if gas_value is None:
+        gas_value = data.get("gas")
+    try:
+        gas_ppm = None if gas_value is None else float(gas_value)
+    except (TypeError, ValueError):
+        gas_ppm = None
+
+    return {
+        "temperature": temperature,
+        "humidity": humidity,
+        "pir": pir,
+        "gas_ppm": gas_ppm,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+
+def store_sensor_data(sensor_payload: dict):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(
+        "INSERT INTO sensor_logs (temperature, humidity, pir, gas_ppm, timestamp) VALUES (?, ?, ?, ?, ?)",
+        (
+            sensor_payload["temperature"],
+            sensor_payload["humidity"],
+            None if sensor_payload["pir"] is None else int(bool(sensor_payload["pir"])),
+            sensor_payload["gas_ppm"],
+            sensor_payload["timestamp"],
+        )
+    )
+    conn.commit()
+    conn.close()
+    print(
+        f"[{sensor_payload['timestamp']}] Nhiet do: {sensor_payload['temperature']}°C"
+        f"  |  Do am: {sensor_payload['humidity']}%"
+        f"  |  PIR: {sensor_payload['pir']}  |  Gas: {sensor_payload['gas_ppm']}"
+    )
 
 
 def get_current_home_payload() -> dict | None:
@@ -516,31 +575,15 @@ class SensorData(BaseModel):
 
 @app.post("/api/sensor")
 def receive_sensor(data: SensorData):
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     sensor_payload = {
         "temperature": data.temperature,
         "humidity": data.humidity,
         "pir": data.pir,
         "gas_ppm": data.gas_ppm,
-        "timestamp": ts,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        "INSERT INTO sensor_logs (temperature, humidity, pir, gas_ppm, timestamp) VALUES (?, ?, ?, ?, ?)",
-        (
-            data.temperature,
-            data.humidity,
-            None if data.pir is None else int(bool(data.pir)),
-            data.gas_ppm,
-            ts,
-        )
-    )
-    conn.commit()
-    conn.close()
-    print(
-        f"[{ts}] Nhiet do: {data.temperature}°C  |  Do am: {data.humidity}%"
-        f"  |  PIR: {data.pir}  |  Gas: {data.gas_ppm}"
-    )
+    store_sensor_data(sensor_payload)
+    ws_server.emit("sensor.updated", sensor_payload)
     return {"status": "ok", **sensor_payload}
 
 @app.get("/api/sensor")
