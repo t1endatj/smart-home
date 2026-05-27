@@ -51,6 +51,23 @@ VALID_DEVICE_NAMES = {
     "Cửa Khu KT",
 }
 
+DEVICE_API_KEYS = {
+    "Đèn Hành Lang": "light_hallway",
+    "Đèn Phòng Ngủ": "light_bedroom",
+    "Đèn Nhà Vệ Sinh": "light_toilet",
+    "Đèn Chùm Trung Tâm": "light_livingroom",
+    "Đèn Nhà Bếp": "light_kitchen",
+    "Đèn Khu KT": "light_tech",
+    "Quạt Phòng Ngủ": "fan_bedroom",
+    "Quạt Nhà Bếp": "fan_kitchen",
+    "Quạt Trần Phòng Khách": "fan",
+    "Cửa Chính": "door",
+    "Cửa Nhà Vệ Sinh": "door_toilet",
+    "Cửa Phòng Ngủ": "door_bedroom",
+    "Cửa Nhà Bếp": "door_kitchen",
+    "Cửa Khu KT": "door_tech",
+}
+
 MAX_CONTEXT_LOGS = 3
 MAX_LOG_MESSAGE_LENGTH = 120
 MAX_USER_REQUEST_LENGTH = 500
@@ -423,14 +440,45 @@ def stop_websocket_server():
 
 
 def broadcast_home_state(payload: dict, revision: int, updated_at: str):
+    previous_payload = get_current_home_payload() or {}
+    commands = build_device_commands(previous_payload, payload)
+    if not commands:
+        return
     ws_server.emit(
-        "home_state.updated",
+        "device.sync",
         {
-            "payload": payload,
+            "commands": commands,
             "revision": revision,
             "updated_at": updated_at,
         },
     )
+
+
+def build_device_commands(previous_payload: dict, next_payload: dict) -> list[dict]:
+    previous_states = previous_payload.get("deviceStates", {})
+    next_states = next_payload.get("deviceStates", {})
+    if not isinstance(previous_states, dict):
+        previous_states = {}
+    if not isinstance(next_states, dict):
+        next_states = {}
+
+    commands = []
+    for device_name, next_status in next_states.items():
+        if device_name not in VALID_DEVICE_NAMES or not isinstance(next_status, bool):
+            continue
+
+        previous_status = previous_states.get(device_name)
+        if previous_status is next_status:
+            continue
+
+        commands.append(
+            {
+                "device": device_name,
+                "key": DEVICE_API_KEYS.get(device_name, "unknown"),
+                "status": next_status,
+            }
+        )
+    return commands
 
 class SensorData(BaseModel):
     temperature: float
@@ -465,7 +513,6 @@ def receive_sensor(data: SensorData):
         f"[{ts}] Nhiet do: {data.temperature}°C  |  Do am: {data.humidity}%"
         f"  |  PIR: {data.pir}  |  Gas: {data.gas_ppm}"
     )
-    ws_server.emit("sensor.updated", sensor_payload)
     return {"status": "ok", **sensor_payload}
 
 @app.get("/api/sensor")
@@ -511,10 +558,6 @@ class ControlData(BaseModel):
 @app.post("/api/control")
 def control_device(data: ControlData):
     print(f"Dieu khien: {data.device} -> {'BAT' if data.status else 'TAT'}")
-    ws_server.emit(
-        "control.command",
-        {"device": data.device, "status": data.status},
-    )
     return {"status": "ok", "device": data.device, "value": data.status}
 
 class AICommandRequest(BaseModel):
@@ -616,6 +659,7 @@ def set_home_state(data: HomeStatePayload):
     ts = datetime.now().isoformat(timespec="milliseconds")
     payload = data.model_dump()
     payload_json = json.dumps(payload, ensure_ascii=False)
+    previous_payload = get_current_home_payload() or {}
 
     conn = sqlite3.connect(DB_PATH)
     current_revision_row = conn.execute(
@@ -635,5 +679,14 @@ def set_home_state(data: HomeStatePayload):
     )
     conn.commit()
     conn.close()
-    broadcast_home_state(payload, next_revision, ts)
+    commands = build_device_commands(previous_payload, payload)
+    if commands:
+        ws_server.emit(
+            "device.sync",
+            {
+                "commands": commands,
+                "revision": next_revision,
+                "updated_at": ts,
+            },
+        )
     return {"status": "ok", "updated_at": ts, "revision": next_revision}
