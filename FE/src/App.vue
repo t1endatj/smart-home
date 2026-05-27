@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import axios from 'axios'
 import ControlPanel from './components/ControlPanel.vue'
 import SmartHome3D from './components/SmartHome3D.vue'
@@ -60,7 +60,7 @@ const connected = ref(false)
 const aiLoading = ref(false)
 
 // Shared states for all lights, fans and doors
-const deviceStates = ref({
+const DEFAULT_DEVICE_STATES = {
   'Đèn Hành Lang': false,
   'Đèn Phòng Ngủ': false,
   'Đèn Nhà Vệ Sinh': false,
@@ -75,9 +75,37 @@ const deviceStates = ref({
   'Cửa Phòng Ngủ': false,
   'Cửa Nhà Bếp': false,
   'Cửa Khu KT': false
-})
+}
+const deviceStates = ref({ ...DEFAULT_DEVICE_STATES })
 
 const logs = ref([])
+
+function applyHomeState(payload) {
+  if (!payload || typeof payload !== 'object') return
+  if (payload.deviceStates && typeof payload.deviceStates === 'object') {
+    deviceStates.value = { ...DEFAULT_DEVICE_STATES, ...payload.deviceStates }
+  }
+  if (Array.isArray(payload.logs)) {
+    logs.value = payload.logs
+  }
+}
+
+let persistTimer
+async function persistHomeState() {
+  const payload = {
+    deviceStates: deviceStates.value,
+    logs: logs.value
+  }
+
+  await axios.post(`${API}/api/state`, payload)
+}
+
+function schedulePersistHomeState() {
+  clearTimeout(persistTimer)
+  persistTimer = setTimeout(() => {
+    persistHomeState().catch(() => {})
+  }, 250)
+}
 
 function addLog(tag, msg, type = 'info') {
   const time = new Date().toLocaleTimeString('en-US', { hour12: false })
@@ -148,7 +176,10 @@ async function toggleDevice(name, source = 'UI Panel') {
   logToConsole(name, isON, source)
 
   // Lights are FE-only (no BE call)
-  if (name.startsWith('Đèn')) return
+  if (name.startsWith('Đèn')) {
+    schedulePersistHomeState()
+    return
+  }
 
   // Send request to API backend (fans/doors)
   try {
@@ -159,6 +190,8 @@ async function toggleDevice(name, source = 'UI Panel') {
     })
   } catch (err) {
     console.error('Lỗi khi điều khiển thiết bị thông qua API:', err)
+  } finally {
+    schedulePersistHomeState()
   }
 }
 
@@ -265,6 +298,15 @@ async function pingAPI() {
 
 let interval
 onMounted(() => {
+  // Bootstrap FE state from BE snapshot (if any)
+  axios
+    .get(`${API}/api/state`)
+    .then((res) => {
+      const payload = res?.data?.payload
+      if (payload) applyHomeState(payload)
+    })
+    .catch(() => {})
+
   pingAPI()
   interval = setInterval(pingAPI, 5000)
   
@@ -276,5 +318,11 @@ onMounted(() => {
   }, 100)
 })
 
-onUnmounted(() => clearInterval(interval))
+watch(deviceStates, schedulePersistHomeState, { deep: true })
+watch(logs, schedulePersistHomeState, { deep: true })
+
+onUnmounted(() => {
+  clearInterval(interval)
+  clearTimeout(persistTimer)
+})
 </script>
