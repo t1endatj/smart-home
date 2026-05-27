@@ -419,18 +419,26 @@ watch([() => sensors.value.temperature, autoFanEnabled, autoFanThreshold], () =>
   }
 })
 
+// Watcher tự động kích hoạt kịch bản SOS khi có cảnh báo Gas, và tự động tắt khi an toàn trở lại
+watch(() => sensors.value.gasAlarm, (newAlarm, oldAlarm) => {
+  if (newAlarm === oldAlarm) return
+  if (newAlarm === true) {
+    runScenario('sos')
+  } else if (newAlarm === false && oldAlarm === true) {
+    runScenario('alloff')
+  }
+})
+
 async function pingAPI() {
   try {
     const res = await axios.get(`${API}/api/sensor/latest`)
     if (res.data && res.data.temperature !== undefined) {
       sensors.value.temperature = res.data.temperature
       sensors.value.humidity = res.data.humidity
-      sensors.value.motion = res.data.pir !== undefined
-        ? Boolean(res.data.pir)
-        : (res.data.motion !== undefined ? Boolean(res.data.motion) : false)
-      sensors.value.gasAlarm = res.data.gasAlarm !== undefined
-        ? Boolean(res.data.gasAlarm)
-        : (res.data.gas_alarm !== undefined ? Boolean(res.data.gas_alarm) : false)
+      sensors.value.motion = res.data.pir !== undefined ? Boolean(res.data.pir) : false
+      sensors.value.gasAlarm = res.data.gas_alarm !== undefined 
+        ? Boolean(res.data.gas_alarm) 
+        : (res.data.gas_ppm !== undefined ? (Number(res.data.gas_ppm) >= 2000) : false)
     }
     connected.value = true
   } catch (err) {
