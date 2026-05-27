@@ -151,10 +151,10 @@
             'p-2 rounded-lg border text-xs transition-all active:scale-95 shrink-0 flex items-center justify-center h-8 w-8',
             isListening 
               ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse shadow-md shadow-red-500/10' 
-              : 'bg-white/[0.02] border-gray-800/80 hover:bg-white/[0.05] text-gray-400'
+              : (speechSupported ? 'bg-white/[0.02] border-gray-800/80 hover:bg-white/[0.05] text-gray-400' : 'bg-gray-900/60 border-gray-800/80 text-gray-600 cursor-not-allowed')
           ]"
-          :title="isListening ? 'Đang lắng nghe... Click để dừng' : 'Ra lệnh bằng giọng nói'"
-          :disabled="aiLoading"
+          :title="!speechSupported ? 'Trình duyệt không hỗ trợ nhận diện giọng nói' : (isListening ? 'Đang lắng nghe... Click để dừng' : 'Ra lệnh bằng giọng nói')"
+          :disabled="aiLoading || !speechSupported"
         >
           <span>🎙️</span>
         </button>
@@ -201,12 +201,14 @@ const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log'])
 
 const commandText = ref('')
 const isListening = ref(false)
+const speechSupported = ref(false)
 let recognition = null
 
 // Initialize SpeechRecognition if browser supported
 if (typeof window !== 'undefined') {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
   if (SpeechRecognition) {
+    speechSupported.value = true
     recognition = new SpeechRecognition()
     recognition.continuous = false
     recognition.lang = 'vi-VN'
@@ -221,8 +223,8 @@ if (typeof window !== 'undefined') {
     recognition.onresult = (event) => {
       const resultText = event.results[0][0].transcript
       if (resultText) {
-        commandText.value = resultText
-        emit('add-log', { tag: 'SYSTEM', msg: `Nhận diện: "${resultText}"`, type: 'success' })
+        commandText.value = resultText.trim()
+        emit('add-log', { tag: 'SYSTEM', msg: `Nhận diện: "${commandText.value}"`, type: 'success' })
         submitCommand()
       }
     }
@@ -247,7 +249,11 @@ if (typeof window !== 'undefined') {
 
 function toggleVoiceRecognition() {
   if (!recognition) {
-    alert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói (Speech Recognition). Vui lòng thử trên Chrome hoặc Edge.')
+    emit('add-log', {
+      tag: 'SYSTEM',
+      msg: 'Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy thử Chrome hoặc Edge.',
+      type: 'danger'
+    })
     return
   }
 
