@@ -72,12 +72,16 @@
           :deviceStates="deviceStates"
           :logs="logs"
           :aiLoading="aiLoading"
+          :sensors="sensors"
+          :autoFanEnabled="autoFanEnabled"
+          :autoFanThreshold="autoFanThreshold"
           :voice-stop-request="voiceStopRequest"
           @toggle="toggleDevice($event, 'UI Switch')"
           @scenario="runScenario"
           @ai-command="handleAICommand"
           @add-log="addLog($event.tag, $event.msg, $event.type)"
           @voice-state="updateVoiceState"
+          @update-auto-fan="handleUpdateAutoFan"
           class="h-full"
         />
       </div>
@@ -96,6 +100,9 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const connected = ref(false)
 const aiLoading = ref(false)
+const sensors = ref({ temperature: null, humidity: null })
+const autoFanEnabled = ref(false)
+const autoFanThreshold = ref(32)
 const voiceListening = ref(false)
 const voiceTranscript = ref('')
 const voiceStopRequest = ref(0)
@@ -385,11 +392,42 @@ async function handleAICommand(command) {
   }
 }
 
+function handleUpdateAutoFan({ enabled, threshold }) {
+  autoFanEnabled.value = enabled
+  autoFanThreshold.value = threshold
+  addLog('SYSTEM', `Tự động quạt: ${enabled ? 'BẬT' : 'TẮT'} (Ngưỡng: ${threshold}°C)`, 'info')
+}
+
+// Watcher tự động bật/tắt quạt theo nhiệt độ khi chế độ Auto bật
+watch([() => sensors.value.temperature, autoFanEnabled, autoFanThreshold], () => {
+  if (!autoFanEnabled.value || sensors.value.temperature === null) return
+  
+  const temp = sensors.value.temperature
+  const thresh = autoFanThreshold.value
+  const targetFan = 'Quạt Trần Phòng Khách' // Quạt đại diện điều khiển
+  
+  if (temp >= thresh) {
+    if (!deviceStates.value[targetFan]) {
+      addLog('SYSTEM', `Nhiệt độ ${temp.toFixed(1)}°C >= ${thresh}°C. Tự động bật quạt phòng khách.`, 'warning')
+      toggleDevice(targetFan, 'Climate Auto')
+    }
+  } else if (temp <= thresh - 2.0) {
+    if (deviceStates.value[targetFan]) {
+      addLog('SYSTEM', `Nhiệt độ ${temp.toFixed(1)}°C <= ${thresh - 2}°C. Tự động tắt quạt phòng khách.`, 'info')
+      toggleDevice(targetFan, 'Climate Auto')
+    }
+  }
+})
+
 async function pingAPI() {
   try {
-    await axios.get(`${API}/api/sensor?limit=1`)
+    const res = await axios.get(`${API}/api/sensor/latest`)
+    if (res.data && res.data.temperature !== undefined) {
+      sensors.value.temperature = res.data.temperature
+      sensors.value.humidity = res.data.humidity
+    }
     connected.value = true
-  } catch {
+  } catch (err) {
     connected.value = false
   }
 }

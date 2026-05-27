@@ -50,6 +50,24 @@
       </div>
     </div>
 
+    <!-- Environment Sensors -->
+    <div class="grid grid-cols-2 gap-2 bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="text-base text-orange-400">🌡️</span>
+        <div>
+          <div class="text-[9px] text-gray-500 font-bold uppercase leading-none">Nhiệt độ</div>
+          <div class="text-xs font-bold text-white mt-0.5">{{ sensors.temperature !== null ? sensors.temperature.toFixed(1) + '°C' : '--' }}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 border-l border-gray-800/60 pl-2">
+        <span class="text-base text-cyan-400">💧</span>
+        <div>
+          <div class="text-[9px] text-gray-500 font-bold uppercase leading-none">Độ ẩm</div>
+          <div class="text-xs font-bold text-white mt-0.5">{{ sensors.humidity !== null ? sensors.humidity.toFixed(1) + '%' : '--' }}</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Scenarios -->
     <div class="flex flex-col gap-1.5">
       <div class="grid grid-cols-4 gap-1.5">
@@ -123,6 +141,40 @@
             {{ deviceStates[fan.name] ? 'ON' : 'OFF' }}
           </span>
         </button>
+      </div>
+
+      <!-- Auto Fan Control Config -->
+      <div class="bg-white/[0.01] border border-gray-800/40 rounded-lg p-2 mt-1.5 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1">
+            🌡️ Tự động theo nhiệt độ
+          </span>
+          <label class="relative inline-flex items-center cursor-pointer scale-90">
+            <input 
+              type="checkbox" 
+              v-model="localAutoFanEnabled"
+              class="sr-only peer"
+              @change="onAutoFanChange"
+            />
+            <div class="w-7 h-4 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-gray-400 peer-checked:after:bg-purple-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-600/30 peer-checked:border peer-checked:border-purple-500/40"></div>
+          </label>
+        </div>
+        
+        <div v-if="localAutoFanEnabled" class="flex flex-col gap-1 transition-all">
+          <div class="flex justify-between text-[9px] text-gray-500 font-medium">
+            <span>Ngưỡng kích hoạt:</span>
+            <span class="text-purple-400 font-bold">{{ localAutoFanThreshold }}°C</span>
+          </div>
+          <input 
+            type="range" 
+            v-model.number="localAutoFanThreshold" 
+            min="25" 
+            max="40" 
+            step="1"
+            class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            @input="onAutoFanChange"
+          />
+        </div>
       </div>
     </div>
 
@@ -205,19 +257,44 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  sensors: {
+    type: Object,
+    default: () => ({ temperature: null, humidity: null })
+  },
+  autoFanEnabled: {
+    type: Boolean,
+    default: false
+  },
+  autoFanThreshold: {
+    type: Number,
+    default: 32
+  },
   voiceStopRequest: {
     type: Number,
     default: 0
   }
 })
 
-const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log', 'voice-state'])
+const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log', 'voice-state', 'update-auto-fan'])
 
 const commandText = ref('')
 const isListening = ref(false)
 const speechSupported = ref(false)
 const liveTranscript = ref('')
 let recognition = null
+
+const localAutoFanEnabled = ref(props.autoFanEnabled)
+const localAutoFanThreshold = ref(props.autoFanThreshold)
+
+watch(() => props.autoFanEnabled, (val) => { localAutoFanEnabled.value = val })
+watch(() => props.autoFanThreshold, (val) => { localAutoFanThreshold.value = val })
+
+function onAutoFanChange() {
+  emit('update-auto-fan', {
+    enabled: localAutoFanEnabled.value,
+    threshold: localAutoFanThreshold.value
+  })
+}
 
 // Initialize SpeechRecognition if browser supported
 if (typeof window !== 'undefined') {
