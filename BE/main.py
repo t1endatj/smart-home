@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import os
+import re
 import sqlite3
 from typing import Optional
 
@@ -43,6 +44,10 @@ VALID_DEVICE_NAMES = {
     "Cửa Nhà Bếp",
     "Cửa Khu KT",
 }
+
+MAX_CONTEXT_LOGS = 5
+MAX_LOG_MESSAGE_LENGTH = 120
+MAX_USER_REQUEST_LENGTH = 500
 
 AI_SYSTEM_PROMPT = """
 Bạn là bộ não điều phối nhà thông minh bằng tiếng Việt.
@@ -140,15 +145,28 @@ def build_ai_context_message(user_text: str) -> str:
     device_states = home_payload.get("deviceStates", {})
     recent_logs = home_payload.get("logs", [])
     if isinstance(recent_logs, list):
-        recent_logs = recent_logs[-8:]
+        recent_logs = recent_logs[-MAX_CONTEXT_LOGS:]
     else:
         recent_logs = []
 
+    compact_logs = []
+    for entry in recent_logs:
+        if not isinstance(entry, dict):
+            continue
+        compact_logs.append(
+            {
+                "time": str(entry.get("time", ""))[:16],
+                "tag": str(entry.get("tag", ""))[:24],
+                "msg": str(entry.get("msg", ""))[:MAX_LOG_MESSAGE_LENGTH],
+                "type": str(entry.get("type", ""))[:16],
+            }
+        )
+
     context = {
-        "user_request": user_text,
+        "user_request": user_text[:MAX_USER_REQUEST_LENGTH],
         "current_home_state": {
             "deviceStates": device_states,
-            "recentLogs": recent_logs,
+            "recentLogs": compact_logs,
             "latestSensor": latest_sensor,
         },
         "instruction": (
@@ -157,6 +175,54 @@ def build_ai_context_message(user_text: str) -> str:
         ),
     }
     return json.dumps(context, ensure_ascii=False)
+
+
+def extract_first_json_object(text: str) -> str | None:
+    start = text.find("{")
+    if start == -1:
+        return None
+
+    depth = 0
+    in_string = False
+    escaped = False
+
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : index + 1]
+
+    return None
+
+
+def parse_ai_json(content: str) -> dict:
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        extracted = extract_first_json_object(content)
+        if extracted:
+            return json.loads(extracted)
+
+        sanitized = re.sub(r"[\x00-\x1f]+", " ", content).strip()
+        extracted = extract_first_json_object(sanitized)
+        if extracted:
+            return json.loads(extracted)
+
+        raise
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -312,13 +378,13 @@ def ai_command(req: AICommandRequest):
                     "model": GROK_MODEL,
                     "messages": messages,
                     "temperature": 0.1,
-                    "max_tokens": 200,
+                    "max_tokens": 450,
                     "response_format": {"type": "json_object"},
                 },
             )
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"].strip()
-        parsed = json.loads(content)
+        parsed = parse_ai_json(content)
     except Exception as exc:
         return {
             "response": f"Lỗi gọi Grok: {exc}",
