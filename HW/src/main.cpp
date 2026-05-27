@@ -17,9 +17,12 @@ constexpr char WIFI_SSID[] = "Wokwi-GUEST";
 constexpr char WIFI_PASSWORD[] = "";
 constexpr char WS_HOST[] = "wss.caohoangphuc.id.vn";
 constexpr uint16_t WS_PORT = 443;
-constexpr char WS_PATH[] = "/";
+constexpr char WS_PATH[] = "/ws";
 constexpr unsigned long WIFI_RETRY_DELAY_MS = 500;
-constexpr unsigned long WS_RECONNECT_INTERVAL_MS = 3000;
+constexpr unsigned long WS_RECONNECT_INTERVAL_MS = 500;
+constexpr uint32_t WS_HEARTBEAT_INTERVAL_MS = 30000;
+constexpr uint32_t WS_HEARTBEAT_TIMEOUT_MS = 10000;
+constexpr uint8_t WS_HEARTBEAT_DISCONNECT_COUNT = 3;
 
 WebSocketsClient webSocket;
 bool webSocketReady = false;
@@ -159,7 +162,12 @@ void onWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
   switch (type) {
     case WStype_DISCONNECTED:
       webSocketReady = false;
-      Serial.println("WebSocket da ngat ket noi.");
+      Serial.print("WebSocket da ngat ket noi");
+      if (payload && length > 0) {
+        Serial.print(": ");
+        Serial.write(payload, length);
+      }
+      Serial.println();
       break;
     case WStype_CONNECTED:
       webSocketReady = true;
@@ -185,7 +193,10 @@ void setupWebSocket() {
 
   webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
   webSocket.setReconnectInterval(WS_RECONNECT_INTERVAL_MS);
-  webSocket.enableHeartbeat(15000, 3000, 2);
+  webSocket.enableHeartbeat(
+      WS_HEARTBEAT_INTERVAL_MS,
+      WS_HEARTBEAT_TIMEOUT_MS,
+      WS_HEARTBEAT_DISCONNECT_COUNT);
   webSocket.onEvent(onWebSocketEvent);
 }
 
