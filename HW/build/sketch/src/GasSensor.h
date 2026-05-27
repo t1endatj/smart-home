@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 struct GasData {
-  int analogValue;
+  int ppm;
   bool digitalAlarm;
 };
 

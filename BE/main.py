@@ -287,19 +287,26 @@ ws_server = WebSocketBroadcastServer(WS_HOST, WS_PORT)
 def get_latest_sensor_snapshot() -> dict | None:
     conn = sqlite3.connect(DB_PATH)
     row = conn.execute(
-        "SELECT temperature, humidity, pir, gas_ppm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT 1"
+        "SELECT temperature, humidity, pir, gas_ppm, gas_alarm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT 1"
     ).fetchone()
     conn.close()
 
     if row is None:
         return None
 
+    gas_alarm_val = None if row[4] is None else bool(row[4])
+    if gas_alarm_val is None and row[3] is not None:
+        gas_alarm_val = float(row[3]) >= 2000.0
+    elif gas_alarm_val is None:
+        gas_alarm_val = False
+
     return {
         "temperature": row[0],
         "humidity": row[1],
         "pir": None if row[2] is None else bool(row[2]),
         "gas_ppm": row[3],
-        "timestamp": row[4],
+        "gas_alarm": gas_alarm_val,
+        "timestamp": row[5],
     }
 
 
@@ -322,11 +329,17 @@ def normalize_sensor_payload(data: dict) -> dict | None:
     except (TypeError, ValueError):
         gas_ppm = None
 
+    gas_alarm_val = data.get("gas_alarm")
+    if gas_alarm_val is None:
+        gas_alarm_val = data.get("gasAlarm")
+    gas_alarm = None if gas_alarm_val is None else bool(gas_alarm_val)
+
     return {
         "temperature": temperature,
         "humidity": humidity,
         "pir": pir,
         "gas_ppm": gas_ppm,
+        "gas_alarm": gas_alarm,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
 
@@ -334,12 +347,13 @@ def normalize_sensor_payload(data: dict) -> dict | None:
 def store_sensor_data(sensor_payload: dict):
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
-        "INSERT INTO sensor_logs (temperature, humidity, pir, gas_ppm, timestamp) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO sensor_logs (temperature, humidity, pir, gas_ppm, gas_alarm, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
         (
             sensor_payload["temperature"],
             sensor_payload["humidity"],
             None if sensor_payload["pir"] is None else int(bool(sensor_payload["pir"])),
             sensor_payload["gas_ppm"],
+            None if sensor_payload["gas_alarm"] is None else int(bool(sensor_payload["gas_alarm"])),
             sensor_payload["timestamp"],
         )
     )
@@ -348,7 +362,7 @@ def store_sensor_data(sensor_payload: dict):
     print(
         f"[{sensor_payload['timestamp']}] Nhiet do: {sensor_payload['temperature']}°C"
         f"  |  Do am: {sensor_payload['humidity']}%"
-        f"  |  PIR: {sensor_payload['pir']}  |  Gas: {sensor_payload['gas_ppm']}"
+        f"  |  PIR: {sensor_payload['pir']}  |  Gas: {sensor_payload['gas_ppm']}  |  Gas Alarm: {sensor_payload['gas_alarm']}"
     )
 
 
@@ -463,6 +477,7 @@ def init_db():
             humidity    REAL NOT NULL,
             pir         INTEGER,
             gas_ppm     REAL,
+            gas_alarm   INTEGER,
             timestamp   TEXT NOT NULL
         )
     """)
@@ -482,6 +497,10 @@ def init_db():
         pass
     try:
         conn.execute("ALTER TABLE sensor_logs ADD COLUMN gas_ppm REAL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE sensor_logs ADD COLUMN gas_alarm INTEGER")
     except sqlite3.OperationalError:
         pass
     try:
@@ -572,6 +591,7 @@ class SensorData(BaseModel):
     humidity: float
     pir: Optional[bool] = None
     gas_ppm: Optional[float] = None
+    gas_alarm: Optional[bool] = None
 
 @app.post("/api/sensor")
 def receive_sensor(data: SensorData):
@@ -580,6 +600,7 @@ def receive_sensor(data: SensorData):
         "humidity": data.humidity,
         "pir": data.pir,
         "gas_ppm": data.gas_ppm,
+        "gas_alarm": data.gas_alarm,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
     store_sensor_data(sensor_payload)
@@ -590,36 +611,53 @@ def receive_sensor(data: SensorData):
 def get_sensor(limit: int = 20):
     conn = sqlite3.connect(DB_PATH)
     rows = conn.execute(
-        "SELECT temperature, humidity, pir, gas_ppm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT ?",
+        "SELECT temperature, humidity, pir, gas_ppm, gas_alarm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT ?",
         (limit,)
     ).fetchall()
     conn.close()
-    return [
-        {
+    
+    result = []
+    for r in rows:
+        gas_alarm_val = None if r[4] is None else bool(r[4])
+        if gas_alarm_val is None and r[3] is not None:
+            gas_alarm_val = float(r[3]) >= 2000.0
+        elif gas_alarm_val is None:
+            gas_alarm_val = False
+
+        result.append({
             "temperature": r[0],
             "humidity": r[1],
             "pir": None if r[2] is None else bool(r[2]),
             "gas_ppm": r[3],
-            "timestamp": r[4],
-        }
-        for r in rows
-    ]
+            "gas_alarm": gas_alarm_val,
+            "timestamp": r[5],
+        })
+    return result
 
 @app.get("/api/sensor/latest")
 def get_latest():
     conn = sqlite3.connect(DB_PATH)
     row = conn.execute(
-        "SELECT temperature, humidity, pir, gas_ppm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT 1"
+        "SELECT temperature, humidity, pir, gas_ppm, gas_alarm, timestamp FROM sensor_logs ORDER BY id DESC LIMIT 1"
     ).fetchone()
     conn.close()
     if row is None:
         return {"message": "Chưa có dữ liệu"}
+
+    gas_alarm_val = None if row[4] is None else bool(row[4])
+    if gas_alarm_val is None and row[3] is not None:
+        gas_alarm_val = float(row[3]) >= 2000.0
+    elif gas_alarm_val is None:
+        gas_alarm_val = False
+
     return {
         "temperature": row[0],
         "humidity": row[1],
         "pir": None if row[2] is None else bool(row[2]),
         "gas_ppm": row[3],
-        "timestamp": row[4],
+        "gas_alarm": gas_alarm_val,
+        "gasAlarm": gas_alarm_val,
+        "timestamp": row[5],
     }
 
 class ControlData(BaseModel):

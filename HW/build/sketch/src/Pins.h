@@ -21,7 +21,7 @@ constexpr uint8_t OLED_I2C_ADDRESS = 0x3C;
 
 constexpr uint8_t MQ2_AO_PIN = 35;
 constexpr uint8_t MQ2_DO_PIN = 32;
-constexpr uint16_t MQ2_ANALOG_ALARM_THRESHOLD = 2000;
+constexpr uint16_t MQ2_PPM_ALARM_THRESHOLD = 300;
 
 constexpr uint8_t FAN_BED_IN1_PIN = 25;
 constexpr uint8_t FAN_BED_IN2_PIN = 26;

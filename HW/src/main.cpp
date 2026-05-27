@@ -144,7 +144,7 @@ void sendSensorSnapshot() {
   data["temperature"] = climate.temperature;
   data["humidity"] = climate.humidity;
   data["pir"] = motion;
-  data["gas_ppm"] = gas.analogValue;
+  data["gas_ppm"] = gas.ppm;
   data["gas_alarm"] = gas.digitalAlarm;
 
   String payload;
@@ -269,7 +269,7 @@ void readAndPrintGas() {
   char line[22];
   oledDashboardClear();
   oledDashboardPrintLine(0, "MQ2 NHA BEP");
-  snprintf(line, sizeof(line), "AO %d", gas.analogValue);
+  snprintf(line, sizeof(line), "PPM %d", gas.ppm);
   oledDashboardPrintLine(2, line);
   oledDashboardPrintLine(4, gas.digitalAlarm ? "DO CANH BAO" : "DO BINH THUONG");
 }
@@ -290,7 +290,7 @@ void runAutoOnce() {
 
   const GasData gas = gasSensorRead();
   gasSensorPrint(gas);
-  const bool gasAlarm = gas.digitalAlarm || gas.analogValue >= MQ2_ANALOG_ALARM_THRESHOLD;
+  const bool gasAlarm = gas.digitalAlarm || gas.ppm >= MQ2_PPM_ALARM_THRESHOLD;
   fanMotorSet(FanId::Kitchen, gasAlarm);
 
   char line[22];
@@ -299,7 +299,7 @@ void runAutoOnce() {
   snprintf(line, sizeof(line), "T %.1f*C H %.0f%%", climate.temperature, climate.humidity);
   oledDashboardPrintLine(2, line);
   oledDashboardPrintLine(4, motion ? "PIR CO NGUOI" : "PIR TRONG");
-  snprintf(line, sizeof(line), "GAS %d", gas.analogValue);
+  snprintf(line, sizeof(line), "PPM %d", gas.ppm);
   oledDashboardPrintLine(6, line);
 }
 
