@@ -1,4 +1,4 @@
-/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/core/esp32-hal-matrix.c.o: \
+/home/phuchoangsrc/smart-home/HW/build/core/esp32-hal-matrix.c.o: \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-matrix.c \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-matrix.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal.h \

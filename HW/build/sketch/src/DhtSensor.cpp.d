@@ -1,6 +1,6 @@
-/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DhtSensor.cpp.o: \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DhtSensor.cpp \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DhtSensor.h \
+/home/phuchoangsrc/smart-home/HW/build/sketch/src/DhtSensor.cpp.o: \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/DhtSensor.cpp \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/DhtSensor.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Arduino.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/newlib/platform_include/stdio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp_arduino_version.h \
@@ -170,4 +170,4 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/io_pin_remap.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Arduino.h \
  /home/phuchoangsrc/Arduino/libraries/DHT_sensor_library/DHT.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/Pins.h
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/Pins.h

@@ -1,4 +1,4 @@
-/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/core/IPAddress.cpp.o: \
+/home/phuchoangsrc/smart-home/HW/build/core/IPAddress.cpp.o: \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/IPAddress.cpp \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/IPAddress.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Printable.h \

@@ -1,5 +1,5 @@
-/home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/main.cpp.o: \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/main.cpp \
+/home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp.o: \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/main.cpp \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/Arduino.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/newlib/platform_include/stdio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp_arduino_version.h \
@@ -220,11 +220,11 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiServer.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/WiFi/src/WiFiUdp.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Network/src/NetworkUdp.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DhtSensor.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/DoorLock.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/FanMotor.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/GasSensor.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/LedLight.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/OledDashboard.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/Pins.h \
- /home/phuchoangsrc/smart-home/Smart_Home_HardW/build/sketch/src/PirSensor.h
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/DhtSensor.h \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/DoorLock.h \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/FanMotor.h \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/GasSensor.h \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/LedLight.h \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/OledDashboard.h \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/Pins.h \
+ /home/phuchoangsrc/smart-home/HW/build/sketch/src/PirSensor.h

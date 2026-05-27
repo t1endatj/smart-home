@@ -1,4 +1,4 @@
-#line 1 "/home/phuchoangsrc/smart-home/Smart_Home_HardW/src/DhtSensor.h"
+#line 1 "/tmp/Smart_Home_HardW-cli/Smart_Home_HardW/src/DhtSensor.h"
 #pragma once
 
 #include <Arduino.h>

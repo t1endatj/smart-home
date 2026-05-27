@@ -1,4 +1,4 @@
-#line 1 "/home/phuchoangsrc/smart-home/Smart_Home_HardW/src/FanMotor.cpp"
+#line 1 "/tmp/Smart_Home_HardW-cli/Smart_Home_HardW/src/FanMotor.cpp"
 #include "FanMotor.h"
 
 #include "Pins.h"
