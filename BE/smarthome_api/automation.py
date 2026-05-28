@@ -57,6 +57,8 @@ class AutomationEngine:
         previous_payload = get_current_home_payload() or build_default_home_payload()
         next_payload = clone_payload(previous_payload)
         changed = False
+        automation_settings = previous_payload.get("automation", {})
+        auto_gas_enabled = automation_settings.get("autoGasEnabled", True) is True
 
         temperature = sensor_payload.get("temperature")
         if isinstance(temperature, (int, float)) and temperature >= AUTO_TEMPERATURE_THRESHOLD:
@@ -87,7 +89,7 @@ class AutomationEngine:
         if not gas_alarm and isinstance(gas_ppm, (int, float)):
             gas_alarm = gas_ppm >= AUTO_GAS_THRESHOLD
 
-        if gas_alarm:
+        if auto_gas_enabled and gas_alarm:
             gas_changed = False
             for device_name in LIGHT_DEVICE_NAMES:
                 gas_changed |= set_device_state(next_payload, device_name, True)
@@ -108,4 +110,3 @@ class AutomationEngine:
         updated_at, revision = save_home_state_payload(next_payload)
         emit_home_state_delta(self.ws_server, previous_payload, next_payload, revision, updated_at)
         return True
-

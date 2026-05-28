@@ -189,7 +189,36 @@ def build_default_home_payload() -> dict:
     return {
         "deviceStates": {device_name: False for device_name in VALID_DEVICE_NAMES},
         "logs": [],
+        "automation": {
+            "autoGasEnabled": True,
+        },
     }
+
+
+def normalize_home_payload(payload: dict | None) -> dict:
+    normalized = build_default_home_payload()
+    if not isinstance(payload, dict):
+        return normalized
+
+    device_states = payload.get("deviceStates")
+    if isinstance(device_states, dict):
+        normalized["deviceStates"].update(
+            {
+                device_name: status
+                for device_name, status in device_states.items()
+                if device_name in VALID_DEVICE_NAMES and isinstance(status, bool)
+            }
+        )
+
+    logs = payload.get("logs")
+    if isinstance(logs, list):
+        normalized["logs"] = logs[-MAX_HOME_LOGS:]
+
+    automation = payload.get("automation")
+    if isinstance(automation, dict) and isinstance(automation.get("autoGasEnabled"), bool):
+        normalized["automation"]["autoGasEnabled"] = automation["autoGasEnabled"]
+
+    return normalized
 
 
 def append_home_log(payload: dict, tag: str, msg: str, type_: str = "info"):
@@ -292,4 +321,3 @@ def save_home_state_payload(payload: dict) -> tuple[str, int]:
 
 def clone_payload(payload: dict) -> dict:
     return copy.deepcopy(payload)
-

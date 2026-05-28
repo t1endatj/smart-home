@@ -75,6 +75,7 @@
           :sensors="sensors"
           :autoFanEnabled="autoFanEnabled"
           :autoFanThreshold="autoFanThreshold"
+          :autoGasEnabled="autoGasEnabled"
           :voice-stop-request="voiceStopRequest"
           @toggle="toggleDevice($event, 'UI Switch')"
           @scenario="runScenario"
@@ -82,6 +83,7 @@
           @add-log="addLog($event.tag, $event.msg, $event.type)"
           @voice-state="updateVoiceState"
           @update-auto-fan="handleUpdateAutoFan"
+          @update-auto-gas="handleUpdateAutoGas"
           class="h-full"
         />
       </div>
@@ -103,6 +105,7 @@ const aiLoading = ref(false)
 const sensors = ref({ temperature: null, humidity: null, motion: false, gasAlarm: false })
 const autoFanEnabled = ref(false)
 const autoFanThreshold = ref(32)
+const autoGasEnabled = ref(true)
 const voiceListening = ref(false)
 const voiceTranscript = ref('')
 const voiceStopRequest = ref(0)
@@ -146,6 +149,9 @@ function applyHomeState(payload) {
   if (Array.isArray(payload.logs)) {
     logs.value = payload.logs
   }
+  if (typeof payload.automation?.autoGasEnabled === 'boolean') {
+    autoGasEnabled.value = payload.automation.autoGasEnabled
+  }
 }
 
 async function syncHomeState() {
@@ -174,7 +180,10 @@ let persistTimer
 async function persistHomeState() {
   const payload = {
     deviceStates: deviceStates.value,
-    logs: logs.value
+    logs: logs.value,
+    automation: {
+      autoGasEnabled: autoGasEnabled.value
+    }
   }
 
   persistInFlight = true
@@ -398,6 +407,12 @@ function handleUpdateAutoFan({ enabled, threshold }) {
   addLog('SYSTEM', `Tự động quạt: ${enabled ? 'BẬT' : 'TẮT'} (Ngưỡng: ${threshold}°C)`, 'info')
 }
 
+function handleUpdateAutoGas(enabled) {
+  autoGasEnabled.value = enabled
+  addLog('SYSTEM', `Tự phản ứng khi có gas: ${enabled ? 'BẬT' : 'TẮT'}`, 'info')
+  schedulePersistHomeState()
+}
+
 // Watcher tự động bật/tắt quạt theo nhiệt độ khi chế độ Auto bật
 watch([() => sensors.value.temperature, autoFanEnabled, autoFanThreshold], () => {
   if (!autoFanEnabled.value || sensors.value.temperature === null) return
@@ -421,6 +436,7 @@ watch([() => sensors.value.temperature, autoFanEnabled, autoFanThreshold], () =>
 
 // Watcher tự động kích hoạt kịch bản SOS khi có cảnh báo Gas, và tự động tắt khi an toàn trở lại
 watch(() => sensors.value.gasAlarm, (newAlarm, oldAlarm) => {
+  if (!autoGasEnabled.value) return
   if (newAlarm === oldAlarm) return
   if (newAlarm === true) {
     runScenario('sos')

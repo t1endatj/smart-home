@@ -23,4 +23,4 @@ class AICommandRequest(BaseModel):
 class HomeStatePayload(BaseModel):
     deviceStates: dict
     logs: list | None = None
-
+    automation: dict | None = None

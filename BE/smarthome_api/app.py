@@ -15,6 +15,7 @@ from .storage import (
     get_latest_sensor_snapshot,
     init_db,
     list_sensor_snapshots,
+    normalize_home_payload,
     normalize_sensor_payload,
     save_home_state_payload,
     store_sensor_data,
@@ -131,9 +132,8 @@ def get_home_state():
 
 @app.post("/api/state")
 def set_home_state(data: HomeStatePayload):
-    previous_payload = get_current_home_payload() or {}
-    payload = data.model_dump()
+    previous_payload = normalize_home_payload(get_current_home_payload())
+    payload = normalize_home_payload(data.model_dump())
     updated_at, revision = save_home_state_payload(payload)
     emit_home_state_delta(ws_server, previous_payload, payload, revision, updated_at)
     return {"status": "ok", "updated_at": updated_at, "revision": revision}
-
