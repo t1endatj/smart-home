@@ -76,6 +76,7 @@
           :autoFanEnabled="autoFanEnabled"
           :autoFanThreshold="autoFanThreshold"
           :autoGasEnabled="autoGasEnabled"
+          :autoMotionEnabled="autoMotionEnabled"
           :voice-stop-request="voiceStopRequest"
           @toggle="toggleDevice($event, 'UI Switch')"
           @scenario="runScenario"
@@ -84,6 +85,7 @@
           @voice-state="updateVoiceState"
           @update-auto-fan="handleUpdateAutoFan"
           @update-auto-gas="handleUpdateAutoGas"
+          @update-auto-motion="handleUpdateAutoMotion"
           class="h-full"
         />
       </div>
@@ -102,10 +104,11 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const connected = ref(false)
 const aiLoading = ref(false)
-const sensors = ref({ temperature: null, humidity: null, motion: false, gasAlarm: false })
+const sensors = ref({ temperature: null, humidity: null, motion: false, gasAlarm: false, gasPpm: null })
 const autoFanEnabled = ref(false)
 const autoFanThreshold = ref(32)
 const autoGasEnabled = ref(true)
+const autoMotionEnabled = ref(false)
 const voiceListening = ref(false)
 const voiceTranscript = ref('')
 const voiceStopRequest = ref(0)
@@ -150,6 +153,9 @@ function applyHomeState(payload) {
   if (typeof payload.automation?.autoGasEnabled === 'boolean') {
     autoGasEnabled.value = payload.automation.autoGasEnabled
   }
+  if (typeof payload.automation?.autoMotionEnabled === 'boolean') {
+    autoMotionEnabled.value = payload.automation.autoMotionEnabled
+  }
 }
 
 async function syncHomeState() {
@@ -180,7 +186,8 @@ async function persistHomeState() {
     deviceStates: deviceStates.value,
     logs: logs.value,
     automation: {
-      autoGasEnabled: autoGasEnabled.value
+      autoGasEnabled: autoGasEnabled.value,
+      autoMotionEnabled: autoMotionEnabled.value
     }
   }
 
@@ -409,6 +416,12 @@ function handleUpdateAutoGas(enabled) {
   schedulePersistHomeState()
 }
 
+function handleUpdateAutoMotion(enabled) {
+  autoMotionEnabled.value = enabled
+  addLog('SYSTEM', `Tự động bật thiết bị khi có người: ${enabled ? 'BẬT' : 'TẮT'}`, 'info')
+  schedulePersistHomeState()
+}
+
 // Watcher tự động bật/tắt quạt theo nhiệt độ khi chế độ Auto bật
 watch([() => sensors.value.temperature, autoFanEnabled, autoFanThreshold], () => {
   if (!autoFanEnabled.value || sensors.value.temperature === null) return
@@ -441,6 +454,16 @@ watch(() => sensors.value.gasAlarm, (newAlarm, oldAlarm) => {
   }
 })
 
+// Watcher tự động bật đèn/quạt khi có người
+watch(() => sensors.value.motion, (hasMotion) => {
+  if (!autoMotionEnabled.value) return
+  if (hasMotion) {
+    addLog('SYSTEM', 'Phát hiện chuyển động: Tự động bật quạt & đèn', 'info')
+    if (!deviceStates.value['Đèn Hành Lang']) toggleDevice('Đèn Hành Lang', 'Motion Auto')
+    if (!deviceStates.value['Quạt Trần Phòng Khách']) toggleDevice('Quạt Trần Phòng Khách', 'Motion Auto')
+  }
+})
+
 async function pingAPI() {
   try {
     const res = await axios.get(`${API}/api/sensor/latest`)
@@ -451,6 +474,7 @@ async function pingAPI() {
       sensors.value.gasAlarm = res.data.gas_alarm !== undefined 
         ? Boolean(res.data.gas_alarm) 
         : (res.data.gas_ppm !== undefined ? (Number(res.data.gas_ppm) >= 2000) : false)
+      sensors.value.gasPpm = res.data.gas_ppm !== undefined ? Number(res.data.gas_ppm) : null
     }
     connected.value = true
   } catch (err) {

@@ -93,11 +93,13 @@
         </span>
         <div>
           <div class="text-[9px] text-gray-500 font-bold uppercase leading-none">Khí Gas (MQ-2)</div>
-          <div 
-            class="text-[9px] font-bold mt-0.5" 
-            :class="sensors.gasAlarm ? 'text-red-500 font-extrabold' : 'text-green-500'"
-          >
-            {{ sensors.gasAlarm ? 'CẢNH BÁO!' : 'AN TOÀN' }}
+          <div class="text-[9px] font-bold mt-0.5 flex gap-1 items-center">
+            <span :class="sensors.gasAlarm ? 'text-red-500 font-extrabold' : 'text-green-500'">
+              {{ sensors.gasAlarm ? 'CẢNH BÁO!' : 'AN TOÀN' }}
+            </span>
+            <span class="text-[8px] text-gray-400 font-medium tracking-wide">
+              ({{ sensors.gasPpm !== null && sensors.gasPpm !== undefined ? sensors.gasPpm + ' ppm' : '--' }})
+            </span>
           </div>
         </div>
       </div>
@@ -227,6 +229,22 @@
           <div class="w-7 h-4 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-gray-400 peer-checked:after:bg-red-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-red-600/30 peer-checked:border peer-checked:border-red-500/40"></div>
         </label>
       </div>
+
+      <div class="bg-white/[0.01] border border-gray-800/40 rounded-lg p-2 flex items-center justify-between gap-3 mt-1.5">
+        <div class="flex flex-col">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">🏃 Tự động theo chuyển động</span>
+          <span class="text-[9px] text-gray-500">Tự động bật quạt và đèn khi phát hiện có người.</span>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer scale-90">
+          <input
+            type="checkbox"
+            v-model="localAutoMotionEnabled"
+            class="sr-only peer"
+            @change="onAutoMotionChange"
+          />
+          <div class="w-7 h-4 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-gray-400 peer-checked:after:bg-cyan-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-600/30 peer-checked:border peer-checked:border-cyan-500/40"></div>
+        </label>
+      </div>
     </div>
 
     <!-- Doors -->
@@ -310,7 +328,7 @@ const props = defineProps({
   },
   sensors: {
     type: Object,
-    default: () => ({ temperature: null, humidity: null, motion: false, gasAlarm: false })
+    default: () => ({ temperature: null, humidity: null, motion: false, gasAlarm: false, gasPpm: null })
   },
   autoFanEnabled: {
     type: Boolean,
@@ -324,13 +342,17 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
+  autoMotionEnabled: {
+    type: Boolean,
+    default: false
+  },
   voiceStopRequest: {
     type: Number,
     default: 0
   }
 })
 
-const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log', 'voice-state', 'update-auto-fan', 'update-auto-gas'])
+const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log', 'voice-state', 'update-auto-fan', 'update-auto-gas', 'update-auto-motion'])
 
 const commandText = ref('')
 const isListening = ref(false)
@@ -341,10 +363,12 @@ let recognition = null
 const localAutoFanEnabled = ref(props.autoFanEnabled)
 const localAutoFanThreshold = ref(props.autoFanThreshold)
 const localAutoGasEnabled = ref(props.autoGasEnabled)
+const localAutoMotionEnabled = ref(props.autoMotionEnabled)
 
 watch(() => props.autoFanEnabled, (val) => { localAutoFanEnabled.value = val })
 watch(() => props.autoFanThreshold, (val) => { localAutoFanThreshold.value = val })
 watch(() => props.autoGasEnabled, (val) => { localAutoGasEnabled.value = val })
+watch(() => props.autoMotionEnabled, (val) => { localAutoMotionEnabled.value = val })
 
 function onAutoFanChange() {
   emit('update-auto-fan', {
@@ -355,6 +379,10 @@ function onAutoFanChange() {
 
 function onAutoGasChange() {
   emit('update-auto-gas', localAutoGasEnabled.value)
+}
+
+function onAutoMotionChange() {
+  emit('update-auto-motion', localAutoMotionEnabled.value)
 }
 
 // Initialize SpeechRecognition if browser supported
