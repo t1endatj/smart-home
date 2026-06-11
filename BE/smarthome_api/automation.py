@@ -59,6 +59,7 @@ class AutomationEngine:
         changed = False
         automation_settings = previous_payload.get("automation", {})
         auto_gas_enabled = automation_settings.get("autoGasEnabled", True) is True
+        auto_motion_enabled = automation_settings.get("autoMotionEnabled", False) is True
 
         temperature = sensor_payload.get("temperature")
         if isinstance(temperature, (int, float)) and temperature >= AUTO_TEMPERATURE_THRESHOLD:
@@ -71,7 +72,7 @@ class AutomationEngine:
                     "warning",
                 )
 
-        if sensor_payload.get("pir") is True:
+        if auto_motion_enabled and sensor_payload.get("pir") is True:
             presence_changed = False
             presence_changed |= set_device_state(next_payload, AUTO_PRESENCE_LIGHT, True)
             presence_changed |= set_device_state(next_payload, AUTO_PRESENCE_FAN, True)
