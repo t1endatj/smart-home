@@ -79,8 +79,9 @@ void playHappyBirthdayWithLights() {
 }
 
 void triggerGasAlarmResponse() {
-  Serial.println("CANH BAO GAS: mo cua, nhay den, phat nhac.");
+  Serial.println("CANH BAO GAS: mo cua, bat quat, nhay den, phat nhac.");
   doorLockSetAll(true);
+  fanMotorSetAll(true);
   playHappyBirthdayWithLights();
 }
 
@@ -159,14 +160,17 @@ void applyDeviceCommand(const char *key, bool status) {
     fanMotorSet(FanId::Living, status);
   } else if (strcmp(key, "fan_bedroom") == 0) {
     fanMotorSet(FanId::Bed, status);
-  } else if (strcmp(key, "door1") == 0 || strcmp(key, "door") == 0) {
+  } else if (strcmp(key, "door_tech") == 0) {
     doorLockSet(0, status);
-  } else if (strcmp(key, "door2") == 0 || strcmp(key, "door_toilet") == 0) {
+  } else if (strcmp(key, "door_kitchen") == 0) {
     doorLockSet(1, status);
-  } else if (strcmp(key, "door3") == 0 || strcmp(key, "door_bedroom") == 0) {
+  } else if (strcmp(key, "door_toilet") == 0) {
     doorLockSet(2, status);
-  } else if (strcmp(key, "door4") == 0 || strcmp(key, "door_kitchen") == 0) {
+  } else if (strcmp(key, "door_bedroom") == 0) {
     doorLockSet(3, status);
+  } else if (strcmp(key, "door") == 0) {
+    // Nếu có lắp servo thứ 5 cho cửa chính
+    doorLockSet(4, status);
   } else if (strcmp(key, "door_all") == 0) {
     doorLockSet(status);
   } else {

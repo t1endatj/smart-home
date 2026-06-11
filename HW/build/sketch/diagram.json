@@ -9,7 +9,9 @@
       "id": "title",
       "top": -633.6,
       "left": 297.6,
-      "attrs": { "text": "SMART HOME HARDWARE - So do chia phong theo smart_home_3d_v9.html" }
+      "attrs": {
+        "text": "SMART HOME HARDWARE - So do chia phong theo smart_home_3d_v9.html"
+      }
     },
     {
       "type": "wokwi-text",
@@ -25,84 +27,114 @@
       "id": "led_hall",
       "top": -483.6,
       "left": 359,
-      "attrs": { "color": "yellow", "label": "Den Hanh Lang\nA=GPIO2, C->R330->GND" }
+      "attrs": {
+        "color": "yellow",
+        "label": "Den Hanh Lang\nA=GPIO2, C->R330->GND"
+      }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_hall",
       "top": -447.25,
       "left": 297.6,
-      "attrs": { "value": "330", "label": "R Den Hanh Lang\n330 ohm: LED C -> GND" }
+      "attrs": {
+        "value": "330",
+        "label": "R Den Hanh Lang\n330 ohm: LED C -> GND"
+      }
     },
     {
       "type": "wokwi-servo",
       "id": "servo_lock",
       "top": -453.2,
       "left": 422.4,
-      "attrs": { "label": "Servo cua mau\nPCF8574: P7/P3/P5/P4\nSDA=GPIO21, SCL=GPIO22" }
+      "attrs": {
+        "label": "Servo cua mau\nPCF8574: P7/P3/P5/P4\nSDA=GPIO21, SCL=GPIO22"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "camera_ai",
       "top": -528,
       "left": 441.6,
-      "attrs": { "text": "Camera AI\nngoai cua chinh\n(khong dau Wokwi)" }
+      "attrs": {
+        "text": "Camera AI\nngoai cua chinh\n(khong dau Wokwi)"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "room_bed",
       "top": -288,
       "left": 681.6,
-      "attrs": { "text": "PHONG NGU\n- Den Phong Ngu: GPIO4\n- Quat: IN1=GPIO25, IN2=GPIO26" }
+      "attrs": {
+        "text": "PHONG NGU\n- Den Phong Ngu: GPIO4\n- Quat: IN1=GPIO25, IN2=GPIO26"
+      }
     },
     {
       "type": "wokwi-led",
       "id": "led_bed",
       "top": -301.2,
       "left": 359,
-      "attrs": { "color": "yellow", "label": "Den Phong Ngu\nA=GPIO4, C->R330->GND" }
+      "attrs": {
+        "color": "yellow",
+        "label": "Den Phong Ngu\nA=GPIO4, C->R330->GND"
+      }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_bed",
       "top": -264.85,
       "left": 288,
-      "attrs": { "value": "330", "label": "R Den Phong Ngu\n330 ohm: LED C -> GND" }
+      "attrs": {
+        "value": "330",
+        "label": "R Den Phong Ngu\n330 ohm: LED C -> GND"
+      }
     },
     {
       "type": "wokwi-l298n",
       "id": "drv_fan_bed",
       "top": -300,
       "left": 405,
-      "attrs": { "label": "Driver Quat Phong Ngu\nVCC=5V, GND=GND\nIN1=GPIO25, IN2=GPIO26" }
+      "attrs": {
+        "label": "Driver Quat Phong Ngu\nVCC=5V, GND=GND\nIN1=GPIO25, IN2=GPIO26"
+      }
     },
     {
       "type": "wokwi-dc-motor",
       "id": "fan_bed",
       "top": -290,
       "left": 645,
-      "attrs": { "label": "Quat Phong Ngu\nMOTOR_A1 -> A+\nMOTOR_A2 -> A-" }
+      "attrs": {
+        "label": "Quat Phong Ngu\nMOTOR_A1 -> A+\nMOTOR_A2 -> A-"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "room_wc",
       "top": 451.2,
       "left": 720,
-      "attrs": { "text": "NHA VE SINH\n- Den Nha Ve Sinh: GPIO16" }
+      "attrs": {
+        "text": "NHA VE SINH\n- Den Nha Ve Sinh: GPIO16"
+      }
     },
     {
       "type": "wokwi-led",
       "id": "led_wc",
       "top": 428.4,
       "left": 378.2,
-      "attrs": { "color": "yellow", "label": "Den Nha Ve Sinh\nA=GPIO16, C->R330->GND" }
+      "attrs": {
+        "color": "yellow",
+        "label": "Den Nha Ve Sinh\nA=GPIO16, C->R330->GND"
+      }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_wc",
       "top": 464.75,
       "left": 307.2,
-      "attrs": { "value": "330", "label": "R Den Nha Ve Sinh\n330 ohm: LED C -> GND" }
+      "attrs": {
+        "value": "330",
+        "label": "R Den Nha Ve Sinh\n330 ohm: LED C -> GND"
+      }
     },
     {
       "type": "wokwi-text",
@@ -118,28 +150,38 @@
       "id": "led_living",
       "top": 169.2,
       "left": 368.6,
-      "attrs": { "color": "yellow", "label": "Den Chum Phong Khach\nA=GPIO17, C->R330->GND" }
+      "attrs": {
+        "color": "yellow",
+        "label": "Den Chum Phong Khach\nA=GPIO17, C->R330->GND"
+      }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_living",
       "top": 215.15,
       "left": 297.6,
-      "attrs": { "value": "330", "label": "R Den Phong Khach\n330 ohm: LED C -> GND" }
+      "attrs": {
+        "value": "330",
+        "label": "R Den Phong Khach\n330 ohm: LED C -> GND"
+      }
     },
     {
       "type": "wokwi-dht22",
       "id": "dht_living",
       "top": 163.5,
       "left": 599.4,
-      "attrs": { "label": "DHT11 Phong Khach\nVCC=3V3, GND=GND, DATA=GPIO15\n(Wokwi dung DHT22)" }
+      "attrs": {
+        "label": "DHT11 Phong Khach\nVCC=3V3, GND=GND, DATA=GPIO15\n(Wokwi dung DHT22)"
+      }
     },
     {
       "type": "wokwi-pir-motion-sensor",
       "id": "pir_living",
       "top": 234.4,
       "left": 482.22,
-      "attrs": { "label": "PIR Phong Khach\nVCC=3V3, GND=GND, OUT=GPIO34" }
+      "attrs": {
+        "label": "PIR Phong Khach\nVCC=3V3, GND=GND, OUT=GPIO34"
+      }
     },
     {
       "type": "board-ssd1306",
@@ -156,14 +198,18 @@
       "id": "drv_fan_living",
       "top": 240,
       "left": 405,
-      "attrs": { "label": "Driver Quat Tran PK\nVCC=5V, GND=GND\nIN1=GPIO27, IN2=GPIO14" }
+      "attrs": {
+        "label": "Driver Quat Tran PK\nVCC=5V, GND=GND\nIN1=GPIO27, IN2=GPIO14"
+      }
     },
     {
       "type": "wokwi-dc-motor",
       "id": "fan_living",
       "top": 250,
       "left": 645,
-      "attrs": { "label": "Quat Tran Phong Khach\nMOTOR_A1 -> A+\nMOTOR_A2 -> A-" }
+      "attrs": {
+        "label": "Quat Tran Phong Khach\nMOTOR_A1 -> A+\nMOTOR_A2 -> A-"
+      }
     },
     {
       "type": "wokwi-text",
@@ -179,14 +225,20 @@
       "id": "led_kitchen",
       "top": 716.4,
       "left": 387.8,
-      "attrs": { "color": "yellow", "label": "Den Nha Bep\nA=GPIO18, C->R330->GND" }
+      "attrs": {
+        "color": "yellow",
+        "label": "Den Nha Bep\nA=GPIO18, C->R330->GND"
+      }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_kitchen",
       "top": 762.35,
       "left": 316.8,
-      "attrs": { "value": "330", "label": "R Den Nha Bep\n330 ohm: LED C -> GND" }
+      "attrs": {
+        "value": "330",
+        "label": "R Den Nha Bep\n330 ohm: LED C -> GND"
+      }
     },
     {
       "type": "wokwi-gas-sensor",
@@ -204,14 +256,18 @@
       "id": "drv_fan_kitchen",
       "top": 550,
       "left": 405,
-      "attrs": { "label": "Driver Quat Bep\nVCC=5V, GND=GND\nIN1=GPIO12, IN2=GPIO33" }
+      "attrs": {
+        "label": "Driver Quat Bep\nVCC=5V, GND=GND\nIN1=GPIO12, IN2=GPIO33"
+      }
     },
     {
       "type": "wokwi-dc-motor",
       "id": "fan_kitchen",
       "top": 560,
       "left": 645,
-      "attrs": { "label": "Quat Nha Bep\nMOTOR_A1 -> A+\nMOTOR_A2 -> A-" }
+      "attrs": {
+        "label": "Quat Nha Bep\nMOTOR_A1 -> A+\nMOTOR_A2 -> A-"
+      }
     },
     {
       "type": "wokwi-text",
@@ -227,28 +283,38 @@
       "id": "esp",
       "top": -153.6,
       "left": 484.84,
-      "attrs": { "label": "ESP32 DevKit V1" }
+      "attrs": {
+        "label": "ESP32 DevKit V1"
+      }
     },
     {
       "type": "wokwi-led",
       "id": "led_tech",
       "top": -128.4,
       "left": 359,
-      "attrs": { "color": "yellow", "label": "Den Khu KT\nA=GPIO19, C->R330->GND" }
+      "attrs": {
+        "color": "yellow",
+        "label": "Den Khu KT\nA=GPIO19, C->R330->GND"
+      }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_tech",
       "top": -92.05,
       "left": 288,
-      "attrs": { "value": "330", "label": "R Den Khu KT\n330 ohm: LED C -> GND" }
+      "attrs": {
+        "value": "330",
+        "label": "R Den Khu KT\n330 ohm: LED C -> GND"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "fan_bed_note",
       "top": -288,
       "left": 960,
-      "attrs": { "text": "QUAT PHONG NGU\nDriver L298N: IN1=GPIO25, IN2=GPIO26\nMotor: A+/A- tu driver" }
+      "attrs": {
+        "text": "QUAT PHONG NGU\nDriver L298N: IN1=GPIO25, IN2=GPIO26\nMotor: A+/A- tu driver"
+      }
     },
     {
       "type": "wokwi-text",
@@ -264,65 +330,364 @@
       "id": "fan_kitchen_note",
       "top": 700.8,
       "left": 998.4,
-      "attrs": { "text": "QUAT NHA BEP\nDriver L298N: IN1=GPIO12, IN2=GPIO33\nMotor: A+/A- tu driver" }
+      "attrs": {
+        "text": "QUAT NHA BEP\nDriver L298N: IN1=GPIO12, IN2=GPIO33\nMotor: A+/A- tu driver"
+      }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": -200,
+      "left": 400,
+      "attrs": {
+        "volume": "0.1",
+        "label": "Buzzer (GPIO 23)"
+      }
     }
   ],
   "connections": [
-    [ "esp:TX", "$serialMonitor:RX", "orange", [] ],
-    [ "esp:RX", "$serialMonitor:TX", "orange", [] ],
-    [ "esp:19", "led_tech:A", "gold", [] ],
-    [ "esp:2", "led_hall:A", "gold", [] ],
-    [ "esp:5V", "servo_lock:V+", "red", [] ],
-    [ "esp:GND.2", "servo_lock:GND", "black", [] ],
-    [ "esp:13", "servo_lock:PWM", "lime", [] ],
-    [ "esp:4", "led_bed:A", "gold", [] ],
-    [ "esp:5V", "drv_fan_bed:VCC", "red", [] ],
-    [ "esp:GND.2", "drv_fan_bed:GND", "black", [] ],
-    [ "esp:25", "drv_fan_bed:IN1", "lime", [] ],
-    [ "esp:26", "drv_fan_bed:IN2", "lime", [] ],
-    [ "drv_fan_bed:MOTOR_A1", "fan_bed:A+", "blue", [] ],
-    [ "drv_fan_bed:MOTOR_A2", "fan_bed:A-", "blue", [] ],
-    [ "esp:16", "led_wc:A", "gold", [] ],
-    [ "esp:17", "led_living:A", "gold", [] ],
-    [ "esp:3V3", "dht_living:VCC", "red", [] ],
-    [ "esp:GND.1", "dht_living:GND", "black", [] ],
-    [ "esp:15", "dht_living:SDA", "green", [] ],
-    [ "esp:3V3", "pir_living:VCC", "red", [] ],
-    [ "esp:GND.1", "pir_living:GND", "black", [] ],
-    [ "esp:34", "pir_living:OUT", "green", [] ],
-    [ "esp:3V3", "oled_dashboard:VCC", "red", [] ],
-    [ "esp:GND.1", "oled_dashboard:GND", "black", [] ],
-    [ "esp:22", "oled_dashboard:SCL", "purple", [] ],
-    [ "esp:21", "oled_dashboard:SDA", "cyan", [] ],
-    [ "esp:5V", "drv_fan_living:VCC", "red", [] ],
-    [ "esp:GND.2", "drv_fan_living:GND", "black", [] ],
-    [ "esp:27", "drv_fan_living:IN1", "lime", [] ],
-    [ "esp:14", "drv_fan_living:IN2", "lime", [] ],
-    [ "drv_fan_living:MOTOR_A1", "fan_living:A+", "blue", [] ],
-    [ "drv_fan_living:MOTOR_A2", "fan_living:A-", "blue", [] ],
-    [ "esp:18", "led_kitchen:A", "gold", [] ],
-    [ "esp:5V", "mq2_kitchen:VCC", "red", [] ],
-    [ "esp:GND.1", "mq2_kitchen:GND", "black", [] ],
-    [ "esp:35", "mq2_kitchen:AO", "green", [] ],
-    [ "esp:32", "mq2_kitchen:DO", "green", [] ],
-    [ "esp:5V", "drv_fan_kitchen:VCC", "red", [] ],
-    [ "esp:GND.2", "drv_fan_kitchen:GND", "black", [] ],
-    [ "esp:12", "drv_fan_kitchen:IN1", "lime", [] ],
-    [ "esp:33", "drv_fan_kitchen:IN2", "lime", [] ],
-    [ "drv_fan_kitchen:MOTOR_A1", "fan_kitchen:A+", "blue", [] ],
-    [ "drv_fan_kitchen:MOTOR_A2", "fan_kitchen:A-", "blue", [] ],
-    [ "led_tech:C", "r_tech:1", "gray", [] ],
-    [ "r_tech:2", "esp:GND.2", "black", [] ],
-    [ "led_hall:C", "r_hall:1", "gray", [] ],
-    [ "r_hall:2", "esp:GND.2", "black", [] ],
-    [ "led_bed:C", "r_bed:1", "gray", [] ],
-    [ "r_bed:2", "esp:GND.2", "black", [] ],
-    [ "led_wc:C", "r_wc:1", "gray", [] ],
-    [ "r_wc:2", "esp:GND.2", "black", [] ],
-    [ "led_living:C", "r_living:1", "gray", [] ],
-    [ "r_living:2", "esp:GND.2", "black", [] ],
-    [ "led_kitchen:C", "r_kitchen:1", "gray", [] ],
-    [ "r_kitchen:2", "esp:GND.2", "black", [] ]
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "orange",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "orange",
+      []
+    ],
+    [
+      "esp:19",
+      "led_tech:A",
+      "gold",
+      []
+    ],
+    [
+      "esp:2",
+      "led_hall:A",
+      "gold",
+      []
+    ],
+    [
+      "esp:5V",
+      "servo_lock:V+",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.2",
+      "servo_lock:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:13",
+      "servo_lock:PWM",
+      "lime",
+      []
+    ],
+    [
+      "esp:4",
+      "led_bed:A",
+      "gold",
+      []
+    ],
+    [
+      "esp:5V",
+      "drv_fan_bed:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.2",
+      "drv_fan_bed:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:25",
+      "drv_fan_bed:IN1",
+      "lime",
+      []
+    ],
+    [
+      "esp:26",
+      "drv_fan_bed:IN2",
+      "lime",
+      []
+    ],
+    [
+      "drv_fan_bed:MOTOR_A1",
+      "fan_bed:A+",
+      "blue",
+      []
+    ],
+    [
+      "drv_fan_bed:MOTOR_A2",
+      "fan_bed:A-",
+      "blue",
+      []
+    ],
+    [
+      "esp:16",
+      "led_wc:A",
+      "gold",
+      []
+    ],
+    [
+      "esp:17",
+      "led_living:A",
+      "gold",
+      []
+    ],
+    [
+      "esp:3V3",
+      "dht_living:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.1",
+      "dht_living:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:15",
+      "dht_living:SDA",
+      "green",
+      []
+    ],
+    [
+      "esp:3V3",
+      "pir_living:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.1",
+      "pir_living:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:34",
+      "pir_living:OUT",
+      "green",
+      []
+    ],
+    [
+      "esp:3V3",
+      "oled_dashboard:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.1",
+      "oled_dashboard:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:22",
+      "oled_dashboard:SCL",
+      "purple",
+      []
+    ],
+    [
+      "esp:21",
+      "oled_dashboard:SDA",
+      "cyan",
+      []
+    ],
+    [
+      "esp:5V",
+      "drv_fan_living:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.2",
+      "drv_fan_living:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:27",
+      "drv_fan_living:IN1",
+      "lime",
+      []
+    ],
+    [
+      "esp:14",
+      "drv_fan_living:IN2",
+      "lime",
+      []
+    ],
+    [
+      "drv_fan_living:MOTOR_A1",
+      "fan_living:A+",
+      "blue",
+      []
+    ],
+    [
+      "drv_fan_living:MOTOR_A2",
+      "fan_living:A-",
+      "blue",
+      []
+    ],
+    [
+      "esp:18",
+      "led_kitchen:A",
+      "gold",
+      []
+    ],
+    [
+      "esp:5V",
+      "mq2_kitchen:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.1",
+      "mq2_kitchen:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:35",
+      "mq2_kitchen:AO",
+      "green",
+      []
+    ],
+    [
+      "esp:32",
+      "mq2_kitchen:DO",
+      "green",
+      []
+    ],
+    [
+      "esp:5V",
+      "drv_fan_kitchen:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp:GND.2",
+      "drv_fan_kitchen:GND",
+      "black",
+      []
+    ],
+    [
+      "esp:12",
+      "drv_fan_kitchen:IN1",
+      "lime",
+      []
+    ],
+    [
+      "esp:33",
+      "drv_fan_kitchen:IN2",
+      "lime",
+      []
+    ],
+    [
+      "drv_fan_kitchen:MOTOR_A1",
+      "fan_kitchen:A+",
+      "blue",
+      []
+    ],
+    [
+      "drv_fan_kitchen:MOTOR_A2",
+      "fan_kitchen:A-",
+      "blue",
+      []
+    ],
+    [
+      "led_tech:C",
+      "r_tech:1",
+      "gray",
+      []
+    ],
+    [
+      "r_tech:2",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "led_hall:C",
+      "r_hall:1",
+      "gray",
+      []
+    ],
+    [
+      "r_hall:2",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "led_bed:C",
+      "r_bed:1",
+      "gray",
+      []
+    ],
+    [
+      "r_bed:2",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "led_wc:C",
+      "r_wc:1",
+      "gray",
+      []
+    ],
+    [
+      "r_wc:2",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "led_living:C",
+      "r_living:1",
+      "gray",
+      []
+    ],
+    [
+      "r_living:2",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "led_kitchen:C",
+      "r_kitchen:1",
+      "gray",
+      []
+    ],
+    [
+      "r_kitchen:2",
+      "esp:GND.2",
+      "black",
+      []
+    ],
+    [
+      "buzzer:1",
+      "esp:23",
+      "purple",
+      []
+    ],
+    [
+      "buzzer:2",
+      "esp:GND.1",
+      "black",
+      []
+    ]
   ],
   "dependencies": {}
 }

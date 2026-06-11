@@ -57,13 +57,13 @@ constexpr uint8_t OLED_SDA_PIN = I2C_SDA_PIN;
 constexpr uint8_t OLED_SCL_PIN = I2C_SCL_PIN;
 constexpr uint8_t OLED_I2C_ADDRESS = 0x3C;
 
-constexpr uint8_t SERVO_COUNT = 4;
-constexpr uint8_t SERVO_PINS[SERVO_COUNT] = {7, 3, 5, 4};
-constexpr int SERVO_OFFSETS[SERVO_COUNT] = {0, 0, 0, 0};
+constexpr uint8_t SERVO_COUNT = 5;
+constexpr uint8_t SERVO_PINS[SERVO_COUNT] = {7, 3, 5, 4, 6};
+constexpr int SERVO_OFFSETS[SERVO_COUNT] = {0, 0, 0, 0, 0};
 
 // Door angles currently used in pcf8574_servo_angle_test/pcf8574_servo_angle_test.ino
-constexpr int SERVO_CLOSE_ANGLES[SERVO_COUNT] = {8, 8, 10, 50};
-constexpr int SERVO_OPEN_ANGLES[SERVO_COUNT] = {98, 98, 100, 140};
+constexpr int SERVO_CLOSE_ANGLES[SERVO_COUNT] = {8, 8, 10, 50, 8};
+constexpr int SERVO_OPEN_ANGLES[SERVO_COUNT] = {98, 98, 100, 140, 98};
 constexpr uint16_t SERVO_MOVE_HOLD_FRAMES = 10;
 constexpr uint16_t SERVO_MIN_PULSE_US = 500;
 constexpr uint16_t SERVO_MAX_PULSE_US = 2500;
