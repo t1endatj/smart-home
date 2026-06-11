@@ -119,9 +119,7 @@ const DEFAULT_DEVICE_STATES = {
   'Đèn Nhà Vệ Sinh': false,
   'Đèn Chùm Trung Tâm': false,
   'Đèn Nhà Bếp': false,
-  'Đèn Khu KT': false,
   'Quạt Phòng Ngủ': false,
-  'Quạt Nhà Bếp': false,
   'Quạt Trần Phòng Khách': false,
   'Cửa Chính': false,
   'Cửa Nhà Vệ Sinh': false,
@@ -252,8 +250,8 @@ function logToConsole(device, state, source) {
 function getRelayChannel(device) {
   const mapping = {
     'Đèn Hành Lang': 1, 'Đèn Phòng Ngủ': 2, 'Đèn Nhà Vệ Sinh': 3,
-    'Đèn Chùm Trung Tâm': 4, 'Đèn Nhà Bếp': 5, 'Đèn Khu KT': 6,
-    'Quạt Phòng Ngủ': 7, 'Quạt Nhà Bếp': 8, 'Quạt Trần Phòng Khách': 'PWM'
+    'Đèn Chùm Trung Tâm': 4, 'Đèn Nhà Bếp': 5,
+    'Quạt Phòng Ngủ': 7, 'Quạt Trần Phòng Khách': 'PWM'
   }
   return mapping[device] || 1
 }
@@ -265,9 +263,7 @@ function mapDeviceToApiKey(name) {
     'Đèn Nhà Vệ Sinh': 'light_toilet',
     'Đèn Chùm Trung Tâm': 'light_livingroom',
     'Đèn Nhà Bếp': 'light_kitchen',
-    'Đèn Khu KT': 'light_tech',
     'Quạt Phòng Ngủ': 'fan_bedroom',
-    'Quạt Nhà Bếp': 'fan_kitchen',
     'Quạt Trần Phòng Khách': 'fan', // Map to general 'fan' as in original
     'Cửa Chính': 'door',            // Map to general 'door' as in original
     'Cửa Nhà Vệ Sinh': 'door_toilet',
@@ -323,11 +319,11 @@ function runScenario(type) {
     ['Cửa Chính', 'Cửa Nhà Vệ Sinh', 'Cửa Phòng Ngủ', 'Cửa Nhà Bếp', 'Cửa Khu KT'].forEach(door => {
       if (deviceStates.value[door]) toggleDevice(door, 'Scenario Auto')
     })
-    ['Đèn Hành Lang', 'Đèn Nhà Vệ Sinh', 'Đèn Chùm Trung Tâm', 'Đèn Nhà Bếp', 'Đèn Khu KT'].forEach(light => {
+    ['Đèn Hành Lang', 'Đèn Nhà Vệ Sinh', 'Đèn Chùm Trung Tâm', 'Đèn Nhà Bếp'].forEach(light => {
       if (deviceStates.value[light]) toggleDevice(light, 'Scenario Auto')
     })
     if (!deviceStates.value['Đèn Phòng Ngủ']) toggleDevice('Đèn Phòng Ngủ', 'Scenario Auto')
-    ['Quạt Nhà Bếp', 'Quạt Trần Phòng Khách'].forEach(fan => {
+    ['Quạt Trần Phòng Khách'].forEach(fan => {
       if (deviceStates.value[fan]) toggleDevice(fan, 'Scenario Auto')
     })
     if (!deviceStates.value['Quạt Phòng Ngủ']) toggleDevice('Quạt Phòng Ngủ', 'Scenario Auto')
@@ -339,10 +335,10 @@ function runScenario(type) {
     ['Cửa Chính', 'Cửa Nhà Vệ Sinh', 'Cửa Phòng Ngủ', 'Cửa Nhà Bếp', 'Cửa Khu KT'].forEach(door => {
       if (!deviceStates.value[door]) toggleDevice(door, 'Scenario Auto')
     })
-    ['Đèn Hành Lang', 'Đèn Phòng Ngủ', 'Đèn Nhà Vệ Sinh', 'Đèn Chùm Trung Tâm', 'Đèn Nhà Bếp', 'Đèn Khu KT'].forEach(light => {
+    ['Đèn Hành Lang', 'Đèn Phòng Ngủ', 'Đèn Nhà Vệ Sinh', 'Đèn Chùm Trung Tâm', 'Đèn Nhà Bếp'].forEach(light => {
       if (!deviceStates.value[light]) toggleDevice(light, 'Scenario Auto')
     })
-    ['Quạt Phòng Ngủ', 'Quạt Trần Phòng Khách', 'Quạt Nhà Bếp'].forEach(fan => {
+    ['Quạt Phòng Ngủ', 'Quạt Trần Phòng Khách'].forEach(fan => {
       if (!deviceStates.value[fan]) toggleDevice(fan, 'Scenario Auto')
     })
   } 

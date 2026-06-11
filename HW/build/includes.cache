@@ -7,10 +7,15 @@
   {
     "Sourcefile": null,
     "Include": "",
-    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/esp32"
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/nodemcu-32s"
   },
   {
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/Smart_Home_HardW.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/Buzzer.cpp",
     "Include": "",
     "Includepath": null
   },
@@ -26,8 +31,8 @@
   },
   {
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/DoorLock.cpp",
-    "Include": "ESP32Servo.h",
-    "Includepath": "/home/phuchoangsrc/Arduino/libraries/ESP32Servo/src"
+    "Include": "Wire.h",
+    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Wire/src"
   },
   {
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/DoorLock.cpp",
@@ -48,11 +53,6 @@
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/LedLight.cpp",
     "Include": "",
     "Includepath": null
-  },
-  {
-    "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/OledDashboard.cpp",
-    "Include": "Wire.h",
-    "Includepath": "/home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/libraries/Wire/src"
   },
   {
     "Sourcefile": "/home/phuchoangsrc/smart-home/HW/build/sketch/src/OledDashboard.cpp",
@@ -106,16 +106,6 @@
   },
   {
     "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/DHT_sensor_library/DHT_U.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/ESP32Servo/src/ESP32PWM.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "/home/phuchoangsrc/Arduino/libraries/ESP32Servo/src/ESP32Servo.cpp",
     "Include": "",
     "Includepath": null
   },

@@ -1,7 +1,7 @@
 #line 1 "/tmp/Smart_Home_HardW-cli/Smart_Home_HardW/src/LedLight.cpp"
 #include "LedLight.h"
 
-#include "Pins.h"
+#include "./Pins.h"
 
 namespace {
 struct LedConfig {
@@ -11,12 +11,11 @@ struct LedConfig {
 };
 
 constexpr LedConfig LEDS[] = {
-    {LedId::Hall, LED_HALL_PIN, "Den Hanh Lang"},
-    {LedId::Bed, LED_BED_PIN, "Den Phong Ngu"},
-    {LedId::Wc, LED_WC_PIN, "Den Nha Ve Sinh"},
-    {LedId::Living, LED_LIVING_PIN, "Den Phong Khach"},
-    {LedId::Kitchen, LED_KITCHEN_PIN, "Den Nha Bep"},
-    {LedId::Tech, LED_TECH_PIN, "Den Khu KT"},
+    {LedId::Hall, IotPins::HALLWAY_LED_PIN, "Den Hanh Lang"},
+    {LedId::Kitchen, IotPins::KITCHEN_LED_PIN, "Den Nha Bep"},
+    {LedId::Bathroom, IotPins::BATHROOM_LED_PIN, "Den Nha Ve Sinh"},
+    {LedId::Bedroom, IotPins::BEDROOM_LED_PIN, "Den Phong Ngu"},
+    {LedId::Living, IotPins::LIVING_ROOM_LED_PIN, "Den Phong Khach"},
 };
 
 bool ledStates[static_cast<uint8_t>(LedId::Count)] = {};

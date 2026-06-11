@@ -2,7 +2,7 @@
 
 #include <Wire.h>
 
-#include "Pins.h"
+#include "./Pins.h"
 
 namespace {
 constexpr uint8_t FONT_WIDTH = 5;
@@ -74,14 +74,14 @@ const uint8_t *glyphFor(char value) {
 }
 
 void writeCommand(uint8_t command) {
-  Wire.beginTransmission(OLED_I2C_ADDRESS);
+  Wire.beginTransmission(IotPins::OLED_I2C_ADDRESS);
   Wire.write(0x00);
   Wire.write(command);
   Wire.endTransmission();
 }
 
 void writeData(uint8_t data) {
-  Wire.beginTransmission(OLED_I2C_ADDRESS);
+  Wire.beginTransmission(IotPins::OLED_I2C_ADDRESS);
   Wire.write(0x40);
   Wire.write(data);
   Wire.endTransmission();
@@ -102,7 +102,7 @@ void clearLine(uint8_t line) {
 }
 
 void oledDashboardBegin() {
-  Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+  Wire.begin(IotPins::OLED_SDA_PIN, IotPins::OLED_SCL_PIN);
   delay(50);
 
   writeCommand(0xAE);

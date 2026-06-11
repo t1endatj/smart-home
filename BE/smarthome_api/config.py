@@ -20,10 +20,8 @@ VALID_DEVICE_NAMES = {
     "Đèn Nhà Vệ Sinh",
     "Đèn Chùm Trung Tâm",
     "Đèn Nhà Bếp",
-    "Đèn Khu KT",
     "Quạt Phòng Ngủ",
     "Quạt Trần Phòng Khách",
-    "Quạt Nhà Bếp",
     "Cửa Chính",
     "Cửa Nhà Vệ Sinh",
     "Cửa Phòng Ngủ",
@@ -37,7 +35,6 @@ LIGHT_DEVICE_NAMES = (
     "Đèn Nhà Vệ Sinh",
     "Đèn Chùm Trung Tâm",
     "Đèn Nhà Bếp",
-    "Đèn Khu KT",
 )
 
 DOOR_DEVICE_NAMES = (
@@ -54,9 +51,7 @@ DEVICE_API_KEYS = {
     "Đèn Nhà Vệ Sinh": "light_toilet",
     "Đèn Chùm Trung Tâm": "light_livingroom",
     "Đèn Nhà Bếp": "light_kitchen",
-    "Đèn Khu KT": "light_tech",
     "Quạt Phòng Ngủ": "fan_bedroom",
-    "Quạt Nhà Bếp": "fan_kitchen",
     "Quạt Trần Phòng Khách": "fan",
     "Cửa Chính": "door",
     "Cửa Nhà Vệ Sinh": "door_toilet",
@@ -89,10 +84,8 @@ Danh sách thiết bị hợp lệ (đúng chính tả):
 - Đèn Nhà Vệ Sinh
 - Đèn Chùm Trung Tâm
 - Đèn Nhà Bếp
-- Đèn Khu KT
 - Quạt Phòng Ngủ
 - Quạt Trần Phòng Khách
-- Quạt Nhà Bếp
 - Cửa Chính
 - Cửa Nhà Vệ Sinh
 - Cửa Phòng Ngủ
@@ -119,7 +112,7 @@ Nguyên tắc suy luận quan trọng:
 Ví dụ suy luận:
 - "Tôi về nhà" -> mở Cửa Chính, bật Đèn Hành Lang hoặc Đèn Chùm Trung Tâm nếu đang tắt.
 - "Tôi đi ngủ" -> khóa các cửa đang mở, tắt đèn không cần thiết, giữ Đèn Phòng Ngủ hoặc Quạt Phòng Ngủ nếu hợp lý.
-- "Có cháy ở bếp" -> mở Cửa Chính nếu cần thoát hiểm, bật Đèn Hành Lang/Đèn Nhà Bếp nếu tối, bật Quạt Nhà Bếp, không khóa cửa.
+- "Có cháy ở bếp" -> mở Cửa Chính nếu cần thoát hiểm, bật Đèn Hành Lang/Đèn Nhà Bếp nếu tối, không khóa cửa.
 - "Khói nhiều quá" -> ưu tiên an toàn, có thể dùng scenario "sos" nếu phù hợp.
 - "Phòng khách nóng" -> bật Quạt Trần Phòng Khách, chỉ thêm đèn nếu người dùng có ý cần sáng.
 

@@ -3,18 +3,18 @@
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 
+#include "Buzzer.h"
 #include "DhtSensor.h"
 #include "DoorLock.h"
 #include "FanMotor.h"
 #include "GasSensor.h"
 #include "LedLight.h"
-#include "OledDashboard.h"
 #include "Pins.h"
 #include "PirSensor.h"
 
 namespace {
-constexpr char WIFI_SSID[] = "Wokwi-GUEST";
-constexpr char WIFI_PASSWORD[] = "";
+constexpr char WIFI_SSID[] = "A20.14b";
+constexpr char WIFI_PASSWORD[] = "20142014b";
 constexpr char WS_HOST[] = "wss.caohoangphuc.id.vn";
 constexpr uint16_t WS_PORT = 443;
 constexpr char WS_PATH[] = "/ws";
@@ -24,11 +24,65 @@ constexpr uint32_t WS_HEARTBEAT_INTERVAL_MS = 30000;
 constexpr uint32_t WS_HEARTBEAT_TIMEOUT_MS = 10000;
 constexpr uint8_t WS_HEARTBEAT_DISCONNECT_COUNT = 3;
 constexpr unsigned long SENSOR_SYNC_INTERVAL_MS = 1000;
+constexpr unsigned long GAS_CHECK_INTERVAL_MS = 300;
 
 WebSocketsClient webSocket;
 bool webSocketReady = false;
 bool sendSensorSnapshotOnConnect = false;
 unsigned long lastSensorSyncMs = 0;
+unsigned long lastGasCheckMs = 0;
+bool gasAlarmLatched = false;
+
+void setAllLights(bool on) {
+  ledLightSetAll(on);
+}
+
+void playHappyBirthdayWithLights() {
+  struct NoteStep {
+    uint16_t frequency;
+    uint16_t durationMs;
+  };
+
+  constexpr uint16_t C4 = 262;
+  constexpr uint16_t D4 = 294;
+  constexpr uint16_t E4 = 330;
+  constexpr uint16_t F4 = 349;
+  constexpr uint16_t G4 = 392;
+  constexpr uint16_t A4 = 440;
+  constexpr uint16_t AS4 = 466;
+  constexpr uint16_t C5 = 523;
+  constexpr uint16_t REST = 0;
+
+  constexpr NoteStep HAPPY_BIRTHDAY[] = {
+      {C4, 250},  {C4, 250},  {D4, 500},  {C4, 500},  {F4, 500},  {E4, 900},
+      {REST, 150},
+      {C4, 250},  {C4, 250},  {D4, 500},  {C4, 500},  {G4, 500},  {F4, 900},
+      {REST, 150},
+      {C4, 250},  {C4, 250},  {C5, 500},  {A4, 500},  {F4, 500},  {E4, 500},
+      {D4, 900},  {REST, 150},
+      {AS4, 250}, {AS4, 250}, {A4, 500},  {F4, 500},  {G4, 500},  {F4, 900},
+  };
+
+  bool lightsOn = false;
+  for (const NoteStep &step : HAPPY_BIRTHDAY) {
+    lightsOn = !lightsOn;
+    setAllLights(lightsOn);
+    if (step.frequency == REST) {
+      delay(step.durationMs);
+    } else {
+      buzzerPlayTone(step.frequency, step.durationMs);
+    }
+    delay(40);
+  }
+
+  setAllLights(true);
+}
+
+void triggerGasAlarmResponse() {
+  Serial.println("CANH BAO GAS: mo cua, nhay den, phat nhac.");
+  doorLockSetAll(true);
+  playHappyBirthdayWithLights();
+}
 
 void printHelp() {
   Serial.println();
@@ -40,20 +94,14 @@ void printHelp() {
   Serial.println("  w / W : Den nha ve sinh bat / tat");
   Serial.println("  v / V : Den phong khach bat / tat");
   Serial.println("  k / K : Den nha bep bat / tat");
-  Serial.println("  e / E : Den khu ky thuat bat / tat");
   Serial.println("  2 / 3 : Bat / tat tat ca quat");
-  Serial.println("  q / Q : Quat phong ngu bat / tat");
   Serial.println("  f / F : Quat tran phong khach bat / tat");
-  Serial.println("  n / N : Quat nha bep bat / tat");
-  Serial.println("  o / c : Mo / khoa servo cua chinh");
-  Serial.println("  t : Doc DHT11 phong khach (Wokwi DHT22)");
+  Serial.println("  q / Q : Quat phong ngu bat / tat");
+  Serial.println("  o / c : Mo / khoa tat ca servo cua");
+  Serial.println("  t : Doc DHT11");
   Serial.println("  m : Doc PIR phong khach");
   Serial.println("  g : Doc MQ2 nha bep");
-  Serial.println("  u : OLED hien chu test");
-  Serial.println("  x : OLED hien pattern test");
-  Serial.println("  z : OLED clear");
-  Serial.println("  y / Y : OLED bat / tat");
-  Serial.println("  a : Auto 1 lan (DHT->quat PK, PIR->den PK, MQ2->quat bep)");
+  Serial.println("  a : Auto 1 lan (DHT->quat PK, PIR->den PK, MQ2->coi)");
   Serial.println("  p : In trang thai");
   Serial.println();
   Serial.println("Dong bo thiet bi qua WebSocket:");
@@ -73,10 +121,10 @@ void setupSerial() {
 void setupDevices() {
   ledLightBegin();
   fanMotorBegin();
+  buzzerBegin();
   dhtSensorBegin();
   pirSensorBegin();
   gasSensorBegin();
-  oledDashboardBegin();
   doorLockBegin();
 }
 
@@ -99,24 +147,27 @@ void setupWifi() {
 void applyDeviceCommand(const char *key, bool status) {
   if (strcmp(key, "light_hallway") == 0) {
     ledLightSet(LedId::Hall, status);
-  } else if (strcmp(key, "light_bedroom") == 0) {
-    ledLightSet(LedId::Bed, status);
-  } else if (strcmp(key, "light_toilet") == 0) {
-    ledLightSet(LedId::Wc, status);
-  } else if (strcmp(key, "light_livingroom") == 0) {
-    ledLightSet(LedId::Living, status);
   } else if (strcmp(key, "light_kitchen") == 0) {
     ledLightSet(LedId::Kitchen, status);
-  } else if (strcmp(key, "light_tech") == 0) {
-    ledLightSet(LedId::Tech, status);
-  } else if (strcmp(key, "fan_bedroom") == 0) {
-    fanMotorSet(FanId::Bed, status);
+  } else if (strcmp(key, "light_toilet") == 0) {
+    ledLightSet(LedId::Bathroom, status);
+  } else if (strcmp(key, "light_bedroom") == 0) {
+    ledLightSet(LedId::Bedroom, status);
+  } else if (strcmp(key, "light_livingroom") == 0) {
+    ledLightSet(LedId::Living, status);
   } else if (strcmp(key, "fan") == 0) {
     fanMotorSet(FanId::Living, status);
-  } else if (strcmp(key, "fan_kitchen") == 0) {
-    fanMotorSet(FanId::Kitchen, status);
-  } else if (strncmp(key, "door", 4) == 0) {
-    // Current hardware has one door lock servo; all door keys map to it.
+  } else if (strcmp(key, "fan_bedroom") == 0) {
+    fanMotorSet(FanId::Bed, status);
+  } else if (strcmp(key, "door1") == 0 || strcmp(key, "door") == 0) {
+    doorLockSet(0, status);
+  } else if (strcmp(key, "door2") == 0 || strcmp(key, "door_toilet") == 0) {
+    doorLockSet(1, status);
+  } else if (strcmp(key, "door3") == 0 || strcmp(key, "door_bedroom") == 0) {
+    doorLockSet(2, status);
+  } else if (strcmp(key, "door4") == 0 || strcmp(key, "door_kitchen") == 0) {
+    doorLockSet(3, status);
+  } else if (strcmp(key, "door_all") == 0) {
     doorLockSet(status);
   } else {
     Serial.print("Bo qua key khong ho tro: ");
@@ -244,34 +295,19 @@ void readAndPrintDht() {
   }
 
   dhtSensorPrint(climate);
-
-  char line[22];
-  oledDashboardClear();
-  oledDashboardPrintLine(0, "DHT PHONG KHACH");
-  snprintf(line, sizeof(line), "TEMP %.1f*C", climate.temperature);
-  oledDashboardPrintLine(2, line);
-  snprintf(line, sizeof(line), "HUM %.1f%%", climate.humidity);
-  oledDashboardPrintLine(4, line);
 }
 
 void readAndPrintPir() {
   const bool motion = pirSensorRead();
   pirSensorPrint(motion);
-  oledDashboardClear();
-  oledDashboardPrintLine(0, "PIR PHONG KHACH");
-  oledDashboardPrintLine(2, motion ? "CO CHUYEN DONG" : "KHONG CHUYEN DONG");
 }
 
 void readAndPrintGas() {
   const GasData gas = gasSensorRead();
   gasSensorPrint(gas);
-
-  char line[22];
-  oledDashboardClear();
-  oledDashboardPrintLine(0, "MQ2 NHA BEP");
-  snprintf(line, sizeof(line), "PPM %d", gas.ppm);
-  oledDashboardPrintLine(2, line);
-  oledDashboardPrintLine(4, gas.digitalAlarm ? "DO CANH BAO" : "DO BINH THUONG");
+  if (gas.digitalAlarm) {
+    triggerGasAlarmResponse();
+  }
 }
 
 void runAutoOnce() {
@@ -290,17 +326,28 @@ void runAutoOnce() {
 
   const GasData gas = gasSensorRead();
   gasSensorPrint(gas);
-  const bool gasAlarm = gas.digitalAlarm || gas.ppm >= MQ2_PPM_ALARM_THRESHOLD;
-  fanMotorSet(FanId::Kitchen, gasAlarm);
+  if (gas.digitalAlarm) {
+    triggerGasAlarmResponse();
+  }
+}
 
-  char line[22];
-  oledDashboardClear();
-  oledDashboardPrintLine(0, "AUTO SMART HOME");
-  snprintf(line, sizeof(line), "T %.1f*C H %.0f%%", climate.temperature, climate.humidity);
-  oledDashboardPrintLine(2, line);
-  oledDashboardPrintLine(4, motion ? "PIR CO NGUOI" : "PIR TRONG");
-  snprintf(line, sizeof(line), "PPM %d", gas.ppm);
-  oledDashboardPrintLine(6, line);
+void handleGasAlarm() {
+  const unsigned long now = millis();
+  if (now - lastGasCheckMs < GAS_CHECK_INTERVAL_MS) {
+    return;
+  }
+  lastGasCheckMs = now;
+
+  const GasData gas = gasSensorRead();
+  if (gas.digitalAlarm) {
+    if (!gasAlarmLatched) {
+      gasAlarmLatched = true;
+      triggerGasAlarmResponse();
+    }
+    return;
+  }
+
+  gasAlarmLatched = false;
 }
 
 void printStatus() {
@@ -322,8 +369,13 @@ void printStatus() {
     Serial.println(fanMotorIsOn(id) ? "BAT" : "TAT");
   }
 
-  Serial.print("Cua: ");
-  Serial.println(doorLockIsOpen() ? "MO" : "KHOA");
+  Serial.println("Trang thai cua servo:");
+  for (uint8_t i = 0; i < IotPins::SERVO_COUNT; i++) {
+    Serial.print("  Cua S");
+    Serial.print(i + 1);
+    Serial.print(": ");
+    Serial.println(doorLockIsOpen(i) ? "MO" : "KHOA");
+  }
 }
 
 void handleSerialCommand(char cmd) {
@@ -363,16 +415,16 @@ void handleSerialCommand(char cmd) {
       ledLightSet(LedId::Hall, false);
       break;
     case 'b':
-      ledLightSet(LedId::Bed, true);
+      ledLightSet(LedId::Bedroom, true);
       break;
     case 'B':
-      ledLightSet(LedId::Bed, false);
+      ledLightSet(LedId::Bedroom, false);
       break;
     case 'w':
-      ledLightSet(LedId::Wc, true);
+      ledLightSet(LedId::Bathroom, true);
       break;
     case 'W':
-      ledLightSet(LedId::Wc, false);
+      ledLightSet(LedId::Bathroom, false);
       break;
     case 'v':
       ledLightSet(LedId::Living, true);
@@ -385,12 +437,6 @@ void handleSerialCommand(char cmd) {
       break;
     case 'K':
       ledLightSet(LedId::Kitchen, false);
-      break;
-    case 'e':
-      ledLightSet(LedId::Tech, true);
-      break;
-    case 'E':
-      ledLightSet(LedId::Tech, false);
       break;
     case '2':
       fanMotorSetAll(true);
@@ -415,28 +461,6 @@ void handleSerialCommand(char cmd) {
       break;
     case 'Q':
       fanMotorSet(FanId::Bed, false);
-      break;
-    case 'n':
-      fanMotorSet(FanId::Kitchen, true);
-      break;
-    case 'N':
-      fanMotorSet(FanId::Kitchen, false);
-      break;
-    case 'u':
-      oledDashboardShowTextDemo();
-      break;
-    case 'x':
-      oledDashboardShowPattern();
-      break;
-    case 'z':
-      oledDashboardClear();
-      Serial.println("OLED Dashboard: clear");
-      break;
-    case 'y':
-      oledDashboardSetDisplayOn(true);
-      break;
-    case 'Y':
-      oledDashboardSetDisplayOn(false);
       break;
     case 'p':
       printStatus();
@@ -485,5 +509,6 @@ void setup() {
 void loop() {
   handleSerialCommands();
   handleSocketCommands();
+  handleGasAlarm();
   delay(10);
 }

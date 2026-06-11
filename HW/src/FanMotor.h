@@ -3,9 +3,8 @@
 #include <Arduino.h>
 
 enum class FanId : uint8_t {
-  Bed,
   Living,
-  Kitchen,
+  Bed,
   Count
 };
 

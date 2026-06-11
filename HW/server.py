@@ -85,26 +85,17 @@ v = bat den phong khach
 V = tat den phong khach
 k = bat den nha bep
 K = tat den nha bep
-e = bat den khu ky thuat
-E = tat den khu ky thuat
 2 = bat tat ca quat
 3 = tat tat ca quat
 q = bat quat phong ngu
 Q = tat quat phong ngu
 f = bat quat phong khach
 F = tat quat phong khach
-n = bat quat nha bep
-N = tat quat nha bep
 o = mo cua chinh
 c = khoa cua chinh
 t = doc nhiet do do am
 m = doc cam bien chuyen dong
 g = doc cam bien gas
-u = hien thi OLED test
-x = hien thi OLED pattern
-z = xoa OLED
-y = bat OLED
-Y = tat OLED
 a = chay tu dong 1 lan
 p = in trang thai
 
@@ -112,7 +103,7 @@ Duoc phep tu suy ra chuoi lenh can thiet tu yeu cau tu nhien.
 Vi du:
 - "toi di ngu" -> tat tat ca den, tat tat ca quat, khoa cua: ["0","3","c"]
 - "bat phong khach" -> bat den phong khach: ["v"]
-- "nha bep co mui gas" -> doc gas roi bat quat bep: ["g","n"]
+- "nha bep co mui gas" -> doc gas va kiem tra canh bao: ["g"]
 - "toi ra ngoai" -> tat tat ca den, tat tat ca quat, khoa cua: ["0","3","c"]
 - "mo cua va bat den hanh lang" -> ["o","h"]
 
@@ -121,7 +112,7 @@ Reply bang tieng Viet rat ngan gon, toi da 2 cau.
 Schema: {"commands": ["cac lenh 1 ky tu theo dung thu tu"], "reply": "cau tra loi ngan"}
 """.strip()
 
-VALID_COMMANDS = set("?10hHbBwWvVkKeE23qQfFnNoctmguxz yYap".replace(" ", ""))
+VALID_COMMANDS = set("?10hHbBwWvVkK23qQfFoctmgap".replace(" ", ""))
 
 
 class ClientHub:

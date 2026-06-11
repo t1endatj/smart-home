@@ -2,7 +2,7 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-uart.c \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-uart.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/include/soc/soc_caps.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/qio_qspi/include/sdkconfig.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/dio_qspi/include/sdkconfig.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/include/soc/uart_pins.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/register/soc/io_mux_reg.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/include/soc/soc.h \
@@ -95,7 +95,7 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-matrix.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/include/soc/gpio_sig_map.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-gpio.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/esp32/pins_arduino.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/nodemcu-32s/pins_arduino.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_driver_gpio/include/driver/gpio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_rom/include/esp_rom_gpio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/include/soc/gpio_pins.h \

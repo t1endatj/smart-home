@@ -229,27 +229,25 @@ B(WT*1.5,WH*.85,6,oM, 20,WH*.425,36, 'Lối Thông: Hành Lang ↔ Khách','Lố
 
 // ── DEVICES ──
 // Hành Lang (x=0..20, z=30..40)
-B(1.2,.16,1.2,  0xffe066,  10,WH+.1,35,  'Đèn Hành Lang','LED trần · Hành Lang');
-B(.5,.9,.22,    0xddaa33,   1,1.8,39,    'Servo Khóa Cửa','Servo motor khóa cửa');
+B(1.2,.16,1.2,  0xffe066,  10,WH+.1,35,  'Đèn Hành Lang','GPIO14 · LED hành lang');
+B(.5,.9,.22,    0xddaa33,   1,1.8,39,    'Servo Khóa Cửa','PCF8574 0x20 · SDA GPIO21 · SCL GPIO22');
 B(.55,.45,.45, new THREE.MeshLambertMaterial({color:0x1a1a33,emissive:0x0a0a99,emissiveIntensity:.6}),
   8.5,4.8,40.65, 'Camera AI','Camera ngoài cửa chính · Nhận diện');
 
 // Phòng Ngủ (x=0..20, z=12..30)
-B(1.2,.16,1.2,  0xffe066,  10,WH+.1,21,  'Đèn Phòng Ngủ','LED trần · Phòng Ngủ');
-wallFan(19.7,3.6,25,'east','Quạt Phòng Ngủ','Quạt treo tường · Phòng Ngủ');
+B(1.2,.16,1.2,  0xffe066,  10,WH+.1,21,  'Đèn Phòng Ngủ','GPIO25 · LED phòng ngủ');
+wallFan(19.7,3.6,25,'east','Quạt Phòng Ngủ','EN GPIO4 · IN1 GPIO16 · IN2 GPIO17');
 B(7,.65,9,      0x8899bb,   5,.48,20);
 B(7,1,.9,       0xaabbdd,   5,.85,25.5);
 
 // Nhà VS (x=0..20, z=0..12)
-B(1.2,.16,1.2,  0xffe066,  10,WH+.1, 6,  'Đèn Nhà Vệ Sinh','LED trần · Vệ Sinh');
+B(1.2,.16,1.2,  0xffe066,  10,WH+.1, 6,  'Đèn Nhà Vệ Sinh','GPIO26 · LED nhà vệ sinh');
 
 // Phòng Khách (x=20..45, z=0..40)
-B(4,.2,4,       0xffe066, 32.5,WH+.1,20, 'Đèn Chùm Trung Tâm','Đèn chùm LED · Phòng Khách');
-ceilingFan(32.5,WH-.2,12,'Quạt Trần Phòng Khách','Quạt trần DC · Phòng Khách');
-B(5,3,.2, new THREE.MeshLambertMaterial({color:0x1a2d5a,emissive:0x0f2299,emissiveIntensity:.5}),
-  32.5,2.5,.4, 'Màn Hình OLED','Dashboard thông minh');
-B(.55,.55,.55,  0x55cc77,  32,WH-.3,18,  'Cảm Biến PIR','Phát hiện chuyển động');
-B(.55,.55,.3,   0x55cc77,  30,2,13,     'DHT11 Phòng Khách','Nhiệt độ · Phòng Khách');
+B(4,.2,4,       0xffe066, 32.5,WH+.1,20, 'Đèn Phòng Khách','GPIO12 · LED phòng khách');
+ceilingFan(32.5,WH-.2,12,'Quạt Phòng Khách','EN GPIO5 · IN1 GPIO18 · IN2 GPIO19');
+B(.55,.55,.55,  0x55cc77,  32,WH-.3,18,  'Cảm Biến PIR','GPIO36 · Phát hiện chuyển động');
+B(.55,.55,.3,   0x55cc77,  30,2,13,     'DHT11','GPIO13 · Nhiệt độ và độ ẩm');
 B(1.1,1.6,.5,  new THREE.MeshLambertMaterial({color:0x334455,emissive:0x112244,emissiveIntensity:.4}),
   21.5,1.3,26, 'Loa + Mic','Kết nối Laptop · Phòng Khách');
 B(14,.65,4,     0x7a6655, 32.5,.5,37);
@@ -257,16 +255,14 @@ B(14,1.2,.4,    0x7a6655, 32.5,.9,39.4);
 wallPictureNorth(32.5,3.5,39.92,4.3,'Ảnh Treo Tường','Ảnh PNG nhúng base64 · Phòng Khách');
 
 // Nhà Bếp (x=45..60, z=0..28)
-B(1.2,.16,1.2,  0xffe066, 52.5,WH+.1,14, 'Đèn Nhà Bếp','LED trần · Bếp');
-B(.65,.65,.42,  0x55cc77, 59.3,1.8,26,  'Cảm Biến MQ2 Gas','Phát hiện khí gas · Bếp');
-wallFan(45.3,3.6,22,'west','Quạt Nhà Bếp','Quạt treo tường · Nhà Bếp');
+B(1.2,.16,1.2,  0xffe066, 52.5,WH+.1,14, 'Đèn Nhà Bếp','GPIO27 · LED nhà bếp');
+B(.65,.65,.42,  0x55cc77, 59.3,1.8,26,  'Cảm Biến MQ2 Gas','GPIO33 analog · Ngưỡng cảnh báo 4000');
 B(12,1,2.5,     0x9a8870, 52.5,.65,27);
 
 // Khu KT (x=45..60, z=28..40)
-B(1.2,.16,1.2,  0xffe066, 52.5,WH+.1,34, 'Đèn Khu KT','LED trần · Khu Kỹ Thuật');
 B(1.4,.32,.85,  0x4a6fa5, 47.5,.45,30,  'ESP32 DevKit V1','Vi điều khiển chính');
-B(2.8,.85,1,   new THREE.MeshLambertMaterial({color:0xdd4444,emissive:0xcc1111,emissiveIntensity:.35}),
-  52.5,.68,30, 'Module Relay 8 Kênh','Điều khiển 8 thiết bị');
+B(1.1,.5,.7,   new THREE.MeshLambertMaterial({color:0xdd4444,emissive:0xcc1111,emissiveIntensity:.35}),
+  52.5,.68,30, 'Buzzer','GPIO23 · Còi cảnh báo');
 
 // ── LABELS ──
 function lbl(text,x,y,z,sc){

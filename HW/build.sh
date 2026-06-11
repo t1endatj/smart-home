@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${BUILD_DIR:-$SCRIPT_DIR/build}"
+CLEAN_BUILD="${CLEAN_BUILD:-1}"
 FQBN="${FQBN:-esp32:esp32:esp32}"
 SKETCH_NAME="${SKETCH_NAME:-Smart_Home_HardW}"
 SKETCH_FILE="${SKETCH_FILE:-$SCRIPT_DIR/${SKETCH_NAME}.ino}"
@@ -17,6 +18,10 @@ fi
 if [ ! -f "$SKETCH_FILE" ]; then
   echo "Sketch file not found: $SKETCH_FILE" >&2
   exit 1
+fi
+
+if [ "$CLEAN_BUILD" = "1" ]; then
+  rm -rf "$BUILD_DIR"
 fi
 
 mkdir -p "$BUILD_DIR"

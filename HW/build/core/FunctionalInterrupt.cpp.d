@@ -75,7 +75,7 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/stdlib_noniso.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/binary.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/extra_attr.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/esp32/pins_arduino.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/nodemcu-32s/pins_arduino.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_hw_support/include/esp_sleep.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/include/hal/touch_sensor_legacy_types.h \

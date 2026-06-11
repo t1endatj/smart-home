@@ -1,7 +1,7 @@
 /home/phuchoangsrc/smart-home/HW/build/core/esp32-hal-periman.c.o: \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-periman.c \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-log.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/qio_qspi/include/sdkconfig.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/dio_qspi/include/sdkconfig.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_timer/include/esp_timer.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/newlib/platform_include/stdio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_common/include/esp_err.h \

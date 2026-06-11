@@ -5,11 +5,10 @@
 
 enum class LedId : uint8_t {
   Hall,
-  Bed,
-  Wc,
-  Living,
   Kitchen,
-  Tech,
+  Bathroom,
+  Bedroom,
+  Living,
   Count
 };
 

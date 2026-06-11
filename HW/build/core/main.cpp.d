@@ -2,7 +2,7 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/main.cpp \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/freertos/FreeRTOS-Kernel/include/freertos/FreeRTOS.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/freertos/config/include/freertos/FreeRTOSConfig.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/qio_qspi/include/sdkconfig.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/dio_qspi/include/sdkconfig.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/newlib/platform_include/assert.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/freertos/config/xtensa/include/freertos/FreeRTOSConfig_arch.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/xtensa/include/xtensa_config.h \
@@ -86,7 +86,7 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/stdlib_noniso.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/binary.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/extra_attr.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/esp32/pins_arduino.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/nodemcu-32s/pins_arduino.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_hw_support/include/esp_sleep.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/include/hal/touch_sensor_legacy_types.h \

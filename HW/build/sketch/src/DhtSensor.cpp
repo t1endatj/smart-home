@@ -3,11 +3,10 @@
 
 #include <DHT.h>
 
-#include "Pins.h"
+#include "./Pins.h"
 
 namespace {
-constexpr uint8_t DHT_TYPE = DHT22;
-DHT dht(DHT_PIN, DHT_TYPE);
+DHT dht(IotPins::DHT_PIN, IotPins::DHT_TYPE);
 }
 
 void dhtSensorBegin() {

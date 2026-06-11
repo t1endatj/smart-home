@@ -447,12 +447,12 @@ function initThree() {
   B(1.2, .16, 1.2, 0xffe066, 52.5, WH + .1, 14, 'Đèn Nhà Bếp', 'LED trần · Bếp')
   createPointLight(52.5, WH + .1, 14, 'Đèn Nhà Bếp')
   B(.65, .65, .42, 0x55cc77, 59.3, 1.8, 26, 'Cảm Biến MQ2 Gas', 'Phát hiện khí gas · Bếp')
-  wallFan(45.3, 3.6, 22, 'west', 'Quạt Nhà Bếp', 'Quạt treo tường · Nhà Bếp')
+  // wallFan(45.3, 3.6, 22, 'west', 'Quạt Nhà Bếp', 'Quạt treo tường · Nhà Bếp')
   B(12, 1, 2.5, 0x9a8870, 52.5, .65, 27)
 
   // Khu KT
-  B(1.2, .16, 1.2, 0xffe066, 52.5, WH + .1, 34, 'Đèn Khu KT', 'LED trần · Khu Kỹ Thuật')
-  createPointLight(52.5, WH + .1, 34, 'Đèn Khu KT')
+  // B(1.2, .16, 1.2, 0xffe066, 52.5, WH + .1, 34, 'Đèn Khu KT', 'LED trần · Khu Kỹ Thuật')
+  // createPointLight(52.5, WH + .1, 34, 'Đèn Khu KT')
   B(1.4, .32, .85, 0x4a6fa5, 47.5, .45, 30, 'ESP32 DevKit V1', 'Vi điều khiển chính')
   B(2.8, .85, 1, new THREE.MeshLambertMaterial({ color: 0xdd4444, emissive: 0xcc1111, emissiveIntensity: .35 }), 52.5, .68, 30, 'Module Relay 8 Kênh', 'Điều khiển 8 thiết bị')
 

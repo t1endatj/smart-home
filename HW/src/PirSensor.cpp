@@ -1,13 +1,14 @@
 #include "PirSensor.h"
 
-#include "Pins.h"
+#include "./Pins.h"
 
 void pirSensorBegin() {
-  pinMode(PIR_PIN, INPUT);
+  pinMode(IotPins::PIR_PIN, INPUT);
 }
 
 bool pirSensorRead() {
-  return digitalRead(PIR_PIN) == HIGH;
+  const bool isHigh = digitalRead(IotPins::PIR_PIN) == HIGH;
+  return IotPins::PIR_ACTIVE_HIGH ? isHigh : !isHigh;
 }
 
 void pirSensorPrint(bool motion) {

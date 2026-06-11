@@ -1,7 +1,7 @@
 /home/phuchoangsrc/smart-home/HW/build/core/esp32-hal-gpio.c.o: \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-gpio.c \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-gpio.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/esp32/pins_arduino.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/nodemcu-32s/pins_arduino.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/newlib/platform_include/stdio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_system/include/esp_system.h \

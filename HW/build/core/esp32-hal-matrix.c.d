@@ -92,7 +92,7 @@
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/hal/include/hal/uart_types.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/include/soc/clk_tree_defs.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/cores/esp32/esp32-hal-gpio.h \
- /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/esp32/pins_arduino.h \
+ /home/phuchoangsrc/.arduino15/packages/esp32/hardware/esp32/3.3.8/variants/nodemcu-32s/pins_arduino.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_driver_gpio/include/driver/gpio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/esp_rom/include/esp_rom_gpio.h \
  /home/phuchoangsrc/.arduino15/packages/esp32/tools/esp32-libs/3.3.8/include/soc/esp32/include/soc/gpio_pins.h \

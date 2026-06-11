@@ -1,20 +1,25 @@
 #line 1 "/tmp/Smart_Home_HardW-cli/Smart_Home_HardW/src/FanMotor.cpp"
 #include "FanMotor.h"
 
-#include "Pins.h"
+#include <esp32-hal-ledc.h>
+
+#include "./Pins.h"
 
 namespace {
 struct FanConfig {
   FanId id;
+  uint8_t enPin;
   uint8_t in1Pin;
   uint8_t in2Pin;
+  uint8_t pwmChannel;
   const char *name;
 };
 
 constexpr FanConfig FANS[] = {
-    {FanId::Bed, FAN_BED_IN1_PIN, FAN_BED_IN2_PIN, "Quat Phong Ngu"},
-    {FanId::Living, FAN_LIVING_IN1_PIN, FAN_LIVING_IN2_PIN, "Quat Tran Phong Khach"},
-    {FanId::Kitchen, FAN_KITCHEN_IN1_PIN, FAN_KITCHEN_IN2_PIN, "Quat Nha Bep"},
+    {FanId::Living, IotPins::LIVING_ROOM_FAN_EN_PIN, IotPins::LIVING_ROOM_FAN_IN1_PIN,
+     IotPins::LIVING_ROOM_FAN_IN2_PIN, 0, "Quat Phong Khach"},
+    {FanId::Bed, IotPins::BEDROOM_FAN_EN_PIN, IotPins::BEDROOM_FAN_IN1_PIN,
+     IotPins::BEDROOM_FAN_IN2_PIN, 1, "Quat Phong Ngu"},
 };
 
 bool fanStates[static_cast<uint8_t>(FanId::Count)] = {};
@@ -26,8 +31,12 @@ const FanConfig &configFor(FanId id) {
 
 void fanMotorBegin() {
   for (const FanConfig &fan : FANS) {
+    pinMode(fan.enPin, OUTPUT);
     pinMode(fan.in1Pin, OUTPUT);
     pinMode(fan.in2Pin, OUTPUT);
+    ledcAttachChannel(
+        fan.enPin, IotPins::FAN_PWM_FREQ, IotPins::FAN_PWM_RESOLUTION, fan.pwmChannel);
+    ledcWriteChannel(fan.pwmChannel, 0);
     digitalWrite(fan.in1Pin, LOW);
     digitalWrite(fan.in2Pin, LOW);
     fanStates[static_cast<uint8_t>(fan.id)] = false;
@@ -37,8 +46,15 @@ void fanMotorBegin() {
 void fanMotorSet(FanId id, bool on) {
   const FanConfig &fan = configFor(id);
   fanStates[static_cast<uint8_t>(id)] = on;
-  digitalWrite(fan.in1Pin, on ? HIGH : LOW);
-  digitalWrite(fan.in2Pin, LOW);
+  if (on) {
+    digitalWrite(fan.in1Pin, HIGH);
+    digitalWrite(fan.in2Pin, LOW);
+    ledcWriteChannel(fan.pwmChannel, IotPins::FAN_PWM_DUTY_ON);
+  } else {
+    digitalWrite(fan.in1Pin, LOW);
+    digitalWrite(fan.in2Pin, LOW);
+    ledcWriteChannel(fan.pwmChannel, 0);
+  }
 
   Serial.print(fan.name);
   Serial.println(on ? ": BAT" : ": TAT");
@@ -59,5 +75,5 @@ const char *fanMotorName(FanId id) {
 }
 
 void fanMotorAutoByTemperature(float temperature) {
-  fanMotorSet(FanId::Living, temperature >= FAN_ON_TEMPERATURE);
+  fanMotorSet(FanId::Living, temperature >= IotPins::FAN_ON_TEMPERATURE);
 }

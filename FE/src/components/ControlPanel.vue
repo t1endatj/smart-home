@@ -473,14 +473,12 @@ const lightsList = [
   { name: 'Đèn Phòng Ngủ', label: 'Phòng Ngủ' },
   { name: 'Đèn Nhà Vệ Sinh', label: 'Vệ Sinh' },
   { name: 'Đèn Chùm Trung Tâm', label: 'Phòng Khách' },
-  { name: 'Đèn Nhà Bếp', label: 'Nhà Bếp' },
-  { name: 'Đèn Khu KT', label: 'Khu Kỹ Thuật' }
+  { name: 'Đèn Nhà Bếp', label: 'Nhà Bếp' }
 ]
 
 const fansList = [
   { name: 'Quạt Phòng Ngủ', label: 'Phòng Ngủ' },
-  { name: 'Quạt Trần Phòng Khách', label: 'P. Khách' },
-  { name: 'Quạt Nhà Bếp', label: 'Nhà Bếp' }
+  { name: 'Quạt Trần Phòng Khách', label: 'P. Khách' }
 ]
 
 const doorsList = [
