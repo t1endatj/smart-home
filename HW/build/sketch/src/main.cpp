@@ -38,42 +38,17 @@ void setAllLights(bool on) {
   ledLightSetAll(on);
 }
 
-void playHappyBirthdayWithLights() {
-  struct NoteStep {
-    uint16_t frequency;
-    uint16_t durationMs;
-  };
-
-  constexpr uint16_t C4 = 262;
-  constexpr uint16_t D4 = 294;
-  constexpr uint16_t E4 = 330;
-  constexpr uint16_t F4 = 349;
-  constexpr uint16_t G4 = 392;
-  constexpr uint16_t A4 = 440;
-  constexpr uint16_t AS4 = 466;
-  constexpr uint16_t C5 = 523;
-  constexpr uint16_t REST = 0;
-
-  constexpr NoteStep HAPPY_BIRTHDAY[] = {
-      {C4, 250},  {C4, 250},  {D4, 500},  {C4, 500},  {F4, 500},  {E4, 900},
-      {REST, 150},
-      {C4, 250},  {C4, 250},  {D4, 500},  {C4, 500},  {G4, 500},  {F4, 900},
-      {REST, 150},
-      {C4, 250},  {C4, 250},  {C5, 500},  {A4, 500},  {F4, 500},  {E4, 500},
-      {D4, 900},  {REST, 150},
-      {AS4, 250}, {AS4, 250}, {A4, 500},  {F4, 500},  {G4, 500},  {F4, 900},
-  };
-
+void playSirenWithLights() {
   bool lightsOn = false;
-  for (const NoteStep &step : HAPPY_BIRTHDAY) {
+  // Hú còi 10 nhịp (khoảng 6 giây)
+  for (int i = 0; i < 10; i++) {
     lightsOn = !lightsOn;
     setAllLights(lightsOn);
-    if (step.frequency == REST) {
-      delay(step.durationMs);
-    } else {
-      buzzerPlayTone(step.frequency, step.durationMs);
-    }
-    delay(40);
+    buzzerPlayTone(800, 300); // Tần số 800Hz trong 300ms
+
+    lightsOn = !lightsOn;
+    setAllLights(lightsOn);
+    buzzerPlayTone(1200, 300); // Tần số 1200Hz trong 300ms
   }
 
   setAllLights(true);
@@ -83,7 +58,7 @@ void triggerGasAlarmResponse() {
   Serial.println("CANH BAO GAS: mo cua, bat quat, nhay den, phat nhac.");
   doorLockSetAll(true);
   fanMotorSetAll(true);
-  playHappyBirthdayWithLights();
+  playSirenWithLights();
 }
 
 void printHelp() {
