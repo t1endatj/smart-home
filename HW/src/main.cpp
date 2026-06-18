@@ -33,6 +33,12 @@ unsigned long lastSensorSyncMs = 0;
 unsigned long lastGasCheckMs = 0;
 bool gasAlarmLatched = false;
 
+constexpr uint8_t DOOR_TECH_SERVO_INDEX = 4;
+constexpr uint8_t DOOR_KITCHEN_SERVO_INDEX = 3;
+constexpr uint8_t DOOR_TOILET_SERVO_INDEX = 2;
+constexpr uint8_t DOOR_BEDROOM_SERVO_INDEX = 1;
+constexpr uint8_t DOOR_MAIN_SERVO_INDEX = 0;
+
 void setAllLights(bool on) {
   ledLightSetAll(on);
 }
@@ -145,16 +151,15 @@ void applyDeviceCommand(const char *key, bool status, int speed = 0) {
   } else if (strcmp(key, "fan_bedroom") == 0) {
     applyFanSocketCommand(FanId::Bed, status, speed);
   } else if (strcmp(key, "door_tech") == 0) {
-    doorLockSet(0, status);
+    doorLockSet(DOOR_TECH_SERVO_INDEX, status);
   } else if (strcmp(key, "door_kitchen") == 0) {
-    doorLockSet(1, status);
+    doorLockSet(DOOR_KITCHEN_SERVO_INDEX, status);
   } else if (strcmp(key, "door_toilet") == 0) {
-    doorLockSet(2, status);
+    doorLockSet(DOOR_TOILET_SERVO_INDEX, status);
   } else if (strcmp(key, "door_bedroom") == 0) {
-    doorLockSet(3, status);
+    doorLockSet(DOOR_BEDROOM_SERVO_INDEX, status);
   } else if (strcmp(key, "door") == 0) {
-    // Nếu có lắp servo thứ 5 cho cửa chính
-    doorLockSet(4, status);
+    doorLockSet(DOOR_MAIN_SERVO_INDEX, status);
   } else if (strcmp(key, "door_all") == 0) {
     doorLockSet(status);
   } else {
