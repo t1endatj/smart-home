@@ -161,12 +161,12 @@
     <!-- Fans -->
     <div class="flex flex-col gap-1.5">
       <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">🌀 Hệ thống Quạt</div>
-      <div class="grid grid-cols-3 gap-1.5">
+      <div class="grid grid-cols-1 gap-2">
         <div
           v-for="fan in fansList"
           :key="fan.name"
           :class="[
-            'flex flex-col gap-2 p-2 rounded-lg border transition-all',
+            'flex flex-col gap-2 p-3 rounded-lg border transition-all',
             deviceStates[fan.name]
               ? 'bg-cyan-500/10 border-cyan-500/40 shadow-md shadow-cyan-500/5'
               : 'bg-white/[0.02] border-gray-800/60 hover:bg-white/[0.05]'
