@@ -70,6 +70,7 @@
       <div class="h-full flex flex-col">
         <ControlPanel 
           :deviceStates="deviceStates"
+          :fanSpeeds="fanSpeeds"
           :logs="logs"
           :aiLoading="aiLoading"
           :sensors="sensors"
@@ -79,6 +80,7 @@
           :autoMotionEnabled="autoMotionEnabled"
           :voice-stop-request="voiceStopRequest"
           @toggle="toggleDevice($event, 'UI Switch')"
+          @set-fan-speed="handleSetFanSpeed"
           @scenario="runScenario"
           @ai-command="handleAICommand"
           @add-log="addLog($event.tag, $event.msg, $event.type)"
@@ -131,6 +133,11 @@ const DEFAULT_DEVICE_STATES = {
   'Cửa Khu KT': false
 }
 const deviceStates = ref({ ...DEFAULT_DEVICE_STATES })
+const DEFAULT_FAN_SPEEDS = {
+  'Quạt Phòng Ngủ': 35,
+  'Quạt Trần Phòng Khách': 35
+}
+const fanSpeeds = ref({ ...DEFAULT_FAN_SPEEDS })
 
 const logs = ref([])
 let nextSyncAllowedAt = 0
@@ -146,6 +153,9 @@ function applyHomeState(payload) {
   if (!payload || typeof payload !== 'object') return
   if (payload.deviceStates && typeof payload.deviceStates === 'object') {
     deviceStates.value = { ...DEFAULT_DEVICE_STATES, ...payload.deviceStates }
+  }
+  if (payload.fanSpeeds && typeof payload.fanSpeeds === 'object') {
+    fanSpeeds.value = { ...DEFAULT_FAN_SPEEDS, ...payload.fanSpeeds }
   }
   if (Array.isArray(payload.logs)) {
     logs.value = payload.logs
@@ -190,6 +200,7 @@ let persistTimer
 async function persistHomeState() {
   const payload = {
     deviceStates: deviceStates.value,
+    fanSpeeds: fanSpeeds.value,
     logs: logs.value,
     automation: {
       autoTemperatureEnabled: autoFanEnabled.value,
@@ -240,7 +251,7 @@ function requestVoiceStop() {
   voiceStopRequest.value += 1
 }
 
-function logToConsole(device, state, source) {
+function logToConsole(device, state, source, speed = null) {
   let tag = 'LIGHT'
   let msg = ''
   
@@ -251,9 +262,9 @@ function logToConsole(device, state, source) {
     addLog('RELAY', `Kích hoạt Rơ-le Kênh ${getRelayChannel(device)} (${state ? 'BẬT' : 'TẮT'})`, 'warning')
   } else if (device.startsWith('Quạt')) {
     tag = 'FAN'
-    msg = `${state ? 'BẬT' : 'TẮT'} ${device.toLowerCase()}`
+    msg = `${state ? 'BẬT' : 'TẮT'} ${device.toLowerCase()}${state && speed ? ` ${speed}%` : ''}`
     addLog(tag, msg, state ? 'success' : 'info')
-    addLog('RELAY', `Kích hoạt Rơ-le Kênh ${getRelayChannel(device)} (${state ? 'BẬT' : 'TẮT'})`, 'warning')
+    addLog('RELAY', `Kích hoạt Rơ-le Kênh ${getRelayChannel(device)} (${state ? 'BẬT' : 'TẮT'}${state && speed ? ` / ${speed}%` : ''})`, 'warning')
   } else if (device.startsWith('Cửa')) {
     tag = 'DOOR'
     msg = `${state ? 'MỞ KHÓA' : 'ĐÓNG KHÓA'} ${device.toLowerCase()}`
@@ -295,9 +306,10 @@ async function toggleDevice(name, source = 'UI Panel') {
   lockStateSync()
   deviceStates.value[name] = !deviceStates.value[name]
   const isON = deviceStates.value[name]
+  const speed = name.startsWith('Quạt') ? fanSpeeds.value[name] : null
 
   // Add locally to the Console log monitor
-  logToConsole(name, isON, source)
+  logToConsole(name, isON, source, speed)
 
   // Lights are FE-only (no BE call)
   if (name.startsWith('Đèn')) {
@@ -310,10 +322,37 @@ async function toggleDevice(name, source = 'UI Panel') {
     const apiDeviceKey = mapDeviceToApiKey(name)
     await axios.post(`${API}/api/control`, {
       device: apiDeviceKey,
-      status: isON
+      status: isON,
+      speed
     })
   } catch (err) {
     console.error('Lỗi khi điều khiển thiết bị thông qua API:', err)
+  } finally {
+    schedulePersistHomeState()
+  }
+}
+
+async function handleSetFanSpeed({ name, speed, shouldTurnOn = true, source = 'UI Panel' }) {
+  if (fanSpeeds.value[name] === undefined) return
+  if (speed < 10 || speed > 100) return
+
+  lockStateSync()
+  fanSpeeds.value[name] = speed
+  const isOn = shouldTurnOn ? true : Boolean(deviceStates.value[name])
+  if (shouldTurnOn) {
+    deviceStates.value[name] = true
+  }
+
+  addLog('FAN', `${name} chuyển sang ${speed}%${isOn ? '' : ' (ghi nhớ)'}`, 'info')
+
+  try {
+    await axios.post(`${API}/api/control`, {
+      device: mapDeviceToApiKey(name),
+      status: isOn,
+      speed
+    })
+  } catch (err) {
+    console.error('Lỗi khi cập nhật tốc độ quạt:', err)
   } finally {
     schedulePersistHomeState()
   }
@@ -510,6 +549,7 @@ onMounted(() => {
 })
 
 watch(deviceStates, schedulePersistHomeState, { deep: true })
+watch(fanSpeeds, schedulePersistHomeState, { deep: true })
 watch(logs, schedulePersistHomeState, { deep: true })
 
 onUnmounted(() => {

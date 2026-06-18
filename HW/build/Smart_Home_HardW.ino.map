@@ -1904,7 +1904,7 @@ Discarded input sections
  .debug_aranges
                 0x00000000       0x18 /home/phuchoangsrc/smart-home/HW/build/sketch/Smart_Home_HardW.ino.cpp.o
  .debug_line    0x00000000      0x635 /home/phuchoangsrc/smart-home/HW/build/sketch/Smart_Home_HardW.ino.cpp.o
- .debug_str     0x00000000      0xf9b /home/phuchoangsrc/smart-home/HW/build/sketch/Smart_Home_HardW.ino.cpp.o
+ .debug_str     0x00000000      0xf98 /home/phuchoangsrc/smart-home/HW/build/sketch/Smart_Home_HardW.ino.cpp.o
  .comment       0x00000000       0x30 /home/phuchoangsrc/smart-home/HW/build/sketch/Smart_Home_HardW.ino.cpp.o
  .literal._Z10buzzerBeepmm
                 0x00000000        0x4 /home/phuchoangsrc/smart-home/HW/build/sketch/src/Buzzer.cpp.o

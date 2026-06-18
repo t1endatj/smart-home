@@ -116,8 +116,9 @@ def get_latest():
 
 @app.post("/api/control")
 def control_device(data: ControlData):
-    print(f"Dieu khien: {data.device} -> {'BAT' if data.status else 'TAT'}")
-    return {"status": "ok", "device": data.device, "value": data.status}
+    speed_suffix = f" @ speed {data.speed}" if data.speed is not None else ""
+    print(f"Dieu khien: {data.device} -> {'BAT' if data.status else 'TAT'}{speed_suffix}")
+    return {"status": "ok", "device": data.device, "value": data.status, "speed": data.speed}
 
 
 @app.post("/api/ai/command")

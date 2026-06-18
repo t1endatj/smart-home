@@ -47,7 +47,7 @@ constexpr uint8_t BEDROOM_FAN_IN2_PIN = 17;
 
 constexpr uint32_t FAN_PWM_FREQ = 1000;
 constexpr uint8_t FAN_PWM_RESOLUTION = 8;
-constexpr uint8_t FAN_PWM_DUTY_ON = 255;
+constexpr uint8_t FAN_PWM_DUTY_ON = 85;
 
 // PCF8574 servo expander pins from pcf8574_servo_test/pcf8574_servo_test.ino
 constexpr uint8_t PCF8574_ADDR = 0x20;

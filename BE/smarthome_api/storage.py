@@ -8,10 +8,21 @@ from .config import (
     AUTO_TEMPERATURE_THRESHOLD,
     DB_PATH,
     DEVICE_API_KEYS,
+    FAN_DEVICE_NAMES,
     MAX_CONTEXT_LOGS,
     MAX_HOME_LOGS,
     VALID_DEVICE_NAMES,
 )
+
+
+def normalize_fan_speed_value(value) -> int | None:
+    try:
+        speed = int(value)
+    except (TypeError, ValueError):
+        return None
+    if speed < 10 or speed > 100:
+        return None
+    return speed
 
 
 def gas_alarm_from_values(gas_alarm_value, gas_ppm) -> bool:
@@ -189,6 +200,7 @@ def get_home_state_record() -> dict:
 def build_default_home_payload() -> dict:
     return {
         "deviceStates": {device_name: False for device_name in VALID_DEVICE_NAMES},
+        "fanSpeeds": {device_name: 35 for device_name in FAN_DEVICE_NAMES},
         "logs": [],
         "automation": {
             "autoTemperatureEnabled": False,
@@ -213,6 +225,15 @@ def normalize_home_payload(payload: dict | None) -> dict:
                 if device_name in VALID_DEVICE_NAMES and isinstance(status, bool)
             }
         )
+
+    fan_speeds = payload.get("fanSpeeds")
+    if isinstance(fan_speeds, dict):
+        for device_name, speed in fan_speeds.items():
+            if device_name not in FAN_DEVICE_NAMES:
+                continue
+            normalized_speed = normalize_fan_speed_value(speed)
+            if normalized_speed is not None:
+                normalized["fanSpeeds"][device_name] = normalized_speed
 
     logs = payload.get("logs")
     if isinstance(logs, list):
@@ -270,42 +291,63 @@ def set_device_state(payload: dict, device_name: str, status: bool) -> bool:
 def build_device_commands(previous_payload: dict, next_payload: dict) -> list[dict]:
     previous_states = previous_payload.get("deviceStates", {})
     next_states = next_payload.get("deviceStates", {})
+    previous_speeds = previous_payload.get("fanSpeeds", {})
+    next_speeds = next_payload.get("fanSpeeds", {})
     if not isinstance(previous_states, dict):
         previous_states = {}
     if not isinstance(next_states, dict):
         next_states = {}
+    if not isinstance(previous_speeds, dict):
+        previous_speeds = {}
+    if not isinstance(next_speeds, dict):
+        next_speeds = {}
 
     commands = []
     for device_name, next_status in next_states.items():
         if device_name not in VALID_DEVICE_NAMES or not isinstance(next_status, bool):
             continue
-        if previous_states.get(device_name) is next_status:
-            continue
-        commands.append(
-            {
-                "device": device_name,
-                "key": DEVICE_API_KEYS.get(device_name, "unknown"),
-                "status": next_status,
-            }
+        next_speed = None
+        if device_name in FAN_DEVICE_NAMES:
+            next_speed = normalize_fan_speed_value(next_speeds.get(device_name))
+        status_changed = previous_states.get(device_name) is not next_status
+        speed_changed = (
+            device_name in FAN_DEVICE_NAMES
+            and normalize_fan_speed_value(previous_speeds.get(device_name)) != next_speed
         )
+        if not status_changed and not speed_changed:
+            continue
+        command = {
+            "device": device_name,
+            "key": DEVICE_API_KEYS.get(device_name, "unknown"),
+            "status": next_status,
+        }
+        if next_speed is not None:
+            command["speed"] = next_speed
+        commands.append(command)
     return commands
 
 
 def build_full_device_commands(payload: dict) -> list[dict]:
     device_states = payload.get("deviceStates", {})
+    fan_speeds = payload.get("fanSpeeds", {})
     if not isinstance(device_states, dict):
         device_states = {}
+    if not isinstance(fan_speeds, dict):
+        fan_speeds = {}
     commands = []
     for device_name, status in device_states.items():
         if device_name not in VALID_DEVICE_NAMES or not isinstance(status, bool):
             continue
-        commands.append(
-            {
-                "device": device_name,
-                "key": DEVICE_API_KEYS.get(device_name, "unknown"),
-                "status": status,
-            }
-        )
+        command = {
+            "device": device_name,
+            "key": DEVICE_API_KEYS.get(device_name, "unknown"),
+            "status": status,
+        }
+        if device_name in FAN_DEVICE_NAMES:
+            speed = normalize_fan_speed_value(fan_speeds.get(device_name))
+            if speed is not None:
+                command["speed"] = speed
+        commands.append(command)
     return commands
 
 

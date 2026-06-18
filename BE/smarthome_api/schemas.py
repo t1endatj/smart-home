@@ -14,6 +14,7 @@ class SensorData(BaseModel):
 class ControlData(BaseModel):
     device: str
     status: bool
+    speed: Optional[int] = None
 
 
 class AICommandRequest(BaseModel):
@@ -22,5 +23,6 @@ class AICommandRequest(BaseModel):
 
 class HomeStatePayload(BaseModel):
     deviceStates: dict
+    fanSpeeds: dict | None = None
     logs: list | None = None
     automation: dict | None = None

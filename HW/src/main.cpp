@@ -73,6 +73,8 @@ void printHelp() {
   Serial.println("  2 / 3 : Bat / tat tat ca quat");
   Serial.println("  f / F : Quat tran phong khach bat / tat");
   Serial.println("  q / Q : Quat phong ngu bat / tat");
+  Serial.println("  4 / 5 / 6 : Quat PK 35% / 70% / 100%");
+  Serial.println("  7 / 8 / 9 : Quat PN 35% / 70% / 100%");
   Serial.println("  o / c : Mo / khoa tat ca servo cua");
   Serial.println("  t : Doc DHT11");
   Serial.println("  m : Doc PIR phong khach");
@@ -120,7 +122,14 @@ void setupWifi() {
   Serial.println(WiFi.localIP());
 }
 
-void applyDeviceCommand(const char *key, bool status) {
+void applyFanSocketCommand(FanId id, bool status, int speed) {
+  if (speed >= 10 && speed <= 100) {
+    fanMotorSetSpeedPercent(id, static_cast<uint8_t>(speed));
+  }
+  fanMotorSet(id, status);
+}
+
+void applyDeviceCommand(const char *key, bool status, int speed = 0) {
   if (strcmp(key, "light_hallway") == 0) {
     ledLightSet(LedId::Hall, status);
   } else if (strcmp(key, "light_kitchen") == 0) {
@@ -132,9 +141,9 @@ void applyDeviceCommand(const char *key, bool status) {
   } else if (strcmp(key, "light_livingroom") == 0) {
     ledLightSet(LedId::Living, status);
   } else if (strcmp(key, "fan") == 0) {
-    fanMotorSet(FanId::Living, status);
+    applyFanSocketCommand(FanId::Living, status, speed);
   } else if (strcmp(key, "fan_bedroom") == 0) {
-    fanMotorSet(FanId::Bed, status);
+    applyFanSocketCommand(FanId::Bed, status, speed);
   } else if (strcmp(key, "door_tech") == 0) {
     doorLockSet(0, status);
   } else if (strcmp(key, "door_kitchen") == 0) {
@@ -212,6 +221,7 @@ void applySocketPayload(uint8_t *payload, size_t length) {
   for (JsonObject command : commands) {
     const char *key = command["key"];
     const bool status = command["status"] | false;
+    const int speed = command["speed"] | 0;
     if (!key) {
       continue;
     }
@@ -219,7 +229,12 @@ void applySocketPayload(uint8_t *payload, size_t length) {
     Serial.print(key);
     Serial.print(": ");
     Serial.println(status ? "BAT/MO" : "TAT/KHOA");
-    applyDeviceCommand(key, status);
+    if (speed > 0) {
+      Serial.print("  Toc do quat: ");
+      Serial.print(speed);
+      Serial.println("%");
+    }
+    applyDeviceCommand(key, status, speed);
   }
 }
 
@@ -345,7 +360,15 @@ void printStatus() {
     Serial.print("  ");
     Serial.print(fanMotorName(id));
     Serial.print(": ");
-    Serial.println(fanMotorIsOn(id) ? "BAT" : "TAT");
+    if (fanMotorIsOn(id)) {
+      Serial.print("BAT ");
+      Serial.print(fanMotorSpeedPercent(id));
+      Serial.println("%");
+    } else {
+      Serial.print("TAT (");
+      Serial.print(fanMotorSpeedPercent(id));
+      Serial.println("%)");
+    }
   }
 
   Serial.println("Trang thai cua servo:");
@@ -422,6 +445,24 @@ void handleSerialCommand(char cmd) {
       break;
     case '3':
       fanMotorSetAll(false);
+      break;
+    case '4':
+      fanMotorSetSpeedPercent(FanId::Living, 35);
+      break;
+    case '5':
+      fanMotorSetSpeedPercent(FanId::Living, 70);
+      break;
+    case '6':
+      fanMotorSetSpeedPercent(FanId::Living, 100);
+      break;
+    case '7':
+      fanMotorSetSpeedPercent(FanId::Bed, 35);
+      break;
+    case '8':
+      fanMotorSetSpeedPercent(FanId::Bed, 70);
+      break;
+    case '9':
+      fanMotorSetSpeedPercent(FanId::Bed, 100);
       break;
     case 'o':
       doorLockSet(true);

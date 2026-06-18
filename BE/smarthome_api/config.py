@@ -29,6 +29,11 @@ VALID_DEVICE_NAMES = {
     "Cửa Khu KT",
 }
 
+FAN_DEVICE_NAMES = (
+    "Quạt Phòng Ngủ",
+    "Quạt Trần Phòng Khách",
+)
+
 LIGHT_DEVICE_NAMES = (
     "Đèn Hành Lang",
     "Đèn Phòng Ngủ",
@@ -123,4 +128,3 @@ Schema:
   "scenario": null
 }
 """.strip()
-

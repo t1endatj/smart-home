@@ -162,22 +162,48 @@
     <div class="flex flex-col gap-1.5">
       <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">🌀 Hệ thống Quạt</div>
       <div class="grid grid-cols-3 gap-1.5">
-        <button 
-          v-for="fan in fansList" 
+        <div
+          v-for="fan in fansList"
           :key="fan.name"
-          @click="$emit('toggle', fan.name)"
           :class="[
-            'flex flex-col items-start gap-0.5 p-2 rounded-lg border transition-all active:scale-[0.98]',
-            deviceStates[fan.name] 
-              ? 'bg-cyan-500/10 border-cyan-500/40 shadow-md shadow-cyan-500/5' 
+            'flex flex-col gap-2 p-2 rounded-lg border transition-all',
+            deviceStates[fan.name]
+              ? 'bg-cyan-500/10 border-cyan-500/40 shadow-md shadow-cyan-500/5'
               : 'bg-white/[0.02] border-gray-800/60 hover:bg-white/[0.05]'
           ]"
         >
-          <span class="text-[11px] font-semibold truncate w-full text-left">{{ fan.label }}</span>
-          <span :class="['text-[9px] font-bold uppercase', deviceStates[fan.name] ? 'text-cyan-400' : 'text-gray-500']">
-            {{ deviceStates[fan.name] ? 'ON' : 'OFF' }}
-          </span>
-        </button>
+          <button
+            class="flex flex-col items-start gap-0.5 active:scale-[0.98] transition-all"
+            @click="$emit('toggle', fan.name)"
+          >
+            <span class="text-[11px] font-semibold truncate w-full text-left">{{ fan.label }}</span>
+            <span :class="['text-[9px] font-bold uppercase', deviceStates[fan.name] ? 'text-cyan-400' : 'text-gray-500']">
+              {{ deviceStates[fan.name] ? `ON • ${fanSpeedText(fan.name)}` : `OFF • ${fanSpeedText(fan.name)}` }}
+            </span>
+          </button>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center justify-between text-[9px] font-semibold uppercase tracking-[0.18em] text-gray-500">
+              <span>10%</span>
+              <span>55%</span>
+              <span>100%</span>
+            </div>
+            <input
+              :value="fanSpeeds[fan.name] || 35"
+              type="range"
+              min="10"
+              max="100"
+              step="1"
+              class="h-2 w-full cursor-pointer appearance-none rounded-full border border-cyan-500/10 bg-gray-900/70 accent-cyan-400"
+              :style="fanSpeedTrackStyle(fan.name)"
+              @input="onFanSpeedDrag(fan.name, Number($event.target.value))"
+            />
+            <div class="flex items-center justify-between text-[9px] text-gray-500">
+              <span>Nhẹ</span>
+              <span class="font-bold text-cyan-300">{{ fanSpeedText(fan.name) }}</span>
+              <span>Mạnh</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Auto Fan Control Config -->
@@ -318,6 +344,10 @@ const props = defineProps({
     type: Object,
     required: true
   },
+  fanSpeeds: {
+    type: Object,
+    default: () => ({})
+  },
   logs: {
     type: Array,
     default: () => []
@@ -352,7 +382,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['toggle', 'scenario', 'ai-command', 'add-log', 'voice-state', 'update-auto-fan', 'update-auto-gas', 'update-auto-motion'])
+const emit = defineEmits(['toggle', 'set-fan-speed', 'scenario', 'ai-command', 'add-log', 'voice-state', 'update-auto-fan', 'update-auto-gas', 'update-auto-motion'])
 
 const commandText = ref('')
 const isListening = ref(false)
@@ -490,6 +520,25 @@ function logTagClass(log) {
   if (log.tag === 'DOOR') return 'bg-green-500/15 text-green-300'
   if (log.tag === 'SYSTEM') return 'bg-violet-500/15 text-violet-300'
   return 'bg-white/10 text-gray-300'
+}
+
+function fanSpeedText(fanName) {
+  const speed = Number(props.fanSpeeds?.[fanName] || 35)
+  if (speed <= 35) return `${speed}% • NHẸ`
+  if (speed <= 70) return `${speed}% • VỪA`
+  return `${speed}% • MẠNH`
+}
+
+function fanSpeedTrackStyle(fanName) {
+  const speed = Number(props.fanSpeeds?.[fanName] || 35)
+  const percent = ((speed - 10) / 90) * 100
+  return {
+    background: `linear-gradient(90deg, rgba(34,211,238,0.45) 0%, rgba(34,211,238,0.9) ${percent}%, rgba(17,24,39,0.9) ${percent}%, rgba(17,24,39,0.9) 100%)`
+  }
+}
+
+function onFanSpeedDrag(fanName, speed) {
+  emit('set-fan-speed', { name: fanName, speed, shouldTurnOn: true })
 }
 
 
