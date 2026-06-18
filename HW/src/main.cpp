@@ -13,8 +13,8 @@
 #include "PirSensor.h"
 
 namespace {
-constexpr char WIFI_SSID[] = "A20.14b";
-constexpr char WIFI_PASSWORD[] = "20142014b";
+constexpr char WIFI_SSID[] = "BA4-1017 5G";
+constexpr char WIFI_PASSWORD[] = "1234567?";
 constexpr char WS_HOST[] = "wss.caohoangphuc.id.vn";
 constexpr uint16_t WS_PORT = 443;
 constexpr char WS_PATH[] = "/ws";
