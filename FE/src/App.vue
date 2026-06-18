@@ -156,6 +156,12 @@ function applyHomeState(payload) {
   if (typeof payload.automation?.autoMotionEnabled === 'boolean') {
     autoMotionEnabled.value = payload.automation.autoMotionEnabled
   }
+  if (typeof payload.automation?.autoTemperatureEnabled === 'boolean') {
+    autoFanEnabled.value = payload.automation.autoTemperatureEnabled
+  }
+  if (typeof payload.automation?.autoTemperatureThreshold === 'number') {
+    autoFanThreshold.value = payload.automation.autoTemperatureThreshold
+  }
 }
 
 async function syncHomeState() {
@@ -186,6 +192,8 @@ async function persistHomeState() {
     deviceStates: deviceStates.value,
     logs: logs.value,
     automation: {
+      autoTemperatureEnabled: autoFanEnabled.value,
+      autoTemperatureThreshold: autoFanThreshold.value,
       autoGasEnabled: autoGasEnabled.value,
       autoMotionEnabled: autoMotionEnabled.value
     }
@@ -408,6 +416,7 @@ function handleUpdateAutoFan({ enabled, threshold }) {
   autoFanEnabled.value = enabled
   autoFanThreshold.value = threshold
   addLog('SYSTEM', `Tự động quạt: ${enabled ? 'BẬT' : 'TẮT'} (Ngưỡng: ${threshold}°C)`, 'info')
+  schedulePersistHomeState()
 }
 
 function handleUpdateAutoGas(enabled) {

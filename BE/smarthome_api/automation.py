@@ -58,11 +58,19 @@ class AutomationEngine:
         next_payload = clone_payload(previous_payload)
         changed = False
         automation_settings = previous_payload.get("automation", {})
+        auto_temperature_enabled = automation_settings.get("autoTemperatureEnabled", False) is True
+        auto_temperature_threshold = automation_settings.get(
+            "autoTemperatureThreshold", AUTO_TEMPERATURE_THRESHOLD
+        )
         auto_gas_enabled = automation_settings.get("autoGasEnabled", True) is True
         auto_motion_enabled = automation_settings.get("autoMotionEnabled", False) is True
 
         temperature = sensor_payload.get("temperature")
-        if isinstance(temperature, (int, float)) and temperature >= AUTO_TEMPERATURE_THRESHOLD:
+        if (
+            auto_temperature_enabled
+            and isinstance(temperature, (int, float))
+            and temperature >= float(auto_temperature_threshold)
+        ):
             if set_device_state(next_payload, AUTO_TEMPERATURE_FAN, True):
                 changed = True
                 append_home_log(

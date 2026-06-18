@@ -5,6 +5,7 @@ from datetime import datetime
 
 from .config import (
     AUTO_GAS_THRESHOLD,
+    AUTO_TEMPERATURE_THRESHOLD,
     DB_PATH,
     DEVICE_API_KEYS,
     MAX_CONTEXT_LOGS,
@@ -190,7 +191,10 @@ def build_default_home_payload() -> dict:
         "deviceStates": {device_name: False for device_name in VALID_DEVICE_NAMES},
         "logs": [],
         "automation": {
+            "autoTemperatureEnabled": False,
+            "autoTemperatureThreshold": AUTO_TEMPERATURE_THRESHOLD,
             "autoGasEnabled": True,
+            "autoMotionEnabled": False,
         },
     }
 
@@ -215,8 +219,16 @@ def normalize_home_payload(payload: dict | None) -> dict:
         normalized["logs"] = logs[-MAX_HOME_LOGS:]
 
     automation = payload.get("automation")
-    if isinstance(automation, dict) and isinstance(automation.get("autoGasEnabled"), bool):
-        normalized["automation"]["autoGasEnabled"] = automation["autoGasEnabled"]
+    if isinstance(automation, dict):
+        if isinstance(automation.get("autoTemperatureEnabled"), bool):
+            normalized["automation"]["autoTemperatureEnabled"] = automation["autoTemperatureEnabled"]
+        threshold = automation.get("autoTemperatureThreshold")
+        if isinstance(threshold, (int, float)):
+            normalized["automation"]["autoTemperatureThreshold"] = float(threshold)
+        if isinstance(automation.get("autoGasEnabled"), bool):
+            normalized["automation"]["autoGasEnabled"] = automation["autoGasEnabled"]
+        if isinstance(automation.get("autoMotionEnabled"), bool):
+            normalized["automation"]["autoMotionEnabled"] = automation["autoMotionEnabled"]
 
     return normalized
 
