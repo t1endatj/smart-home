@@ -106,7 +106,7 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const connected = ref(false)
 const aiLoading = ref(false)
-const sensors = ref({ temperature: null, humidity: null, motion: false, gasAlarm: false, gasPpm: null })
+const sensors = ref({ temperature: null, humidity: null, motion: false, gasAlarm: false, gasPpm: null, timestamp: null })
 const autoFanEnabled = ref(false)
 const autoFanThreshold = ref(32)
 const autoGasEnabled = ref(true)
@@ -523,6 +523,7 @@ async function pingAPI() {
         ? Boolean(res.data.gas_alarm) 
         : (res.data.gas_ppm !== undefined ? (Number(res.data.gas_ppm) >= 2000) : false)
       sensors.value.gasPpm = res.data.gas_ppm !== undefined ? Number(res.data.gas_ppm) : null
+      sensors.value.timestamp = res.data.timestamp || new Date().toISOString()
     }
     connected.value = true
   } catch (err) {

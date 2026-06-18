@@ -105,6 +105,67 @@
       </div>
     </div>
 
+    <!-- Biểu đồ lịch sử cảm biến -->
+    <div class="flex flex-col gap-1.5 border-t border-gray-800/40 pt-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">📊 Biểu Đồ Lịch Sử</span>
+        <!-- Hệ thống tab chọn biểu đồ -->
+        <div class="flex bg-gray-900 border border-gray-800 rounded-lg p-0.5 gap-0.5">
+          <button 
+            type="button"
+            @click="activeChartTab = 'temp'"
+            :class="[
+              'px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all cursor-pointer',
+              activeChartTab === 'temp' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
+            ]"
+          >
+            Nhiệt độ
+          </button>
+          <button 
+            type="button"
+            @click="activeChartTab = 'motion'"
+            :class="[
+              'px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all cursor-pointer',
+              activeChartTab === 'motion' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
+            ]"
+          >
+            Chuyển động
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 h-[150px] flex items-center justify-center relative overflow-hidden">
+        <!-- Vùng hiển thị biểu đồ nhiệt độ -->
+        <div v-show="activeChartTab === 'temp'" class="w-full h-full">
+          <apexchart 
+            v-if="sensorHistory.length > 0"
+            height="100%"
+            width="100%"
+            :options="tempChartOptions" 
+            :series="tempSeries"
+          />
+          <div v-else class="text-[10px] text-gray-600 flex items-center justify-center h-full w-full">
+            Đang tải dữ liệu nhiệt độ...
+          </div>
+        </div>
+
+        <!-- Vùng hiển thị biểu đồ chuyển động -->
+        <div v-show="activeChartTab === 'motion'" class="w-full h-full">
+          <apexchart 
+            v-if="sensorHistory.length > 0"
+            height="100%"
+            width="100%"
+            :options="motionChartOptions" 
+            :series="motionSeries"
+          />
+          <div v-else class="text-[10px] text-gray-600 flex items-center justify-center h-full w-full">
+            Đang tải dữ liệu chuyển động...
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- Scenarios -->
     <div class="flex flex-col gap-1.5">
       <div class="grid grid-cols-4 gap-1.5">
@@ -337,7 +398,8 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted, computed } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
   deviceStates: {
@@ -394,6 +456,161 @@ const localAutoFanEnabled = ref(props.autoFanEnabled)
 const localAutoFanThreshold = ref(props.autoFanThreshold)
 const localAutoGasEnabled = ref(props.autoGasEnabled)
 const localAutoMotionEnabled = ref(props.autoMotionEnabled)
+
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const activeChartTab = ref('temp')
+const sensorHistory = ref([])
+
+async function fetchSensorHistory() {
+  try {
+    const res = await axios.get(`${API}/api/sensor?limit=20`)
+    if (res.data && Array.isArray(res.data)) {
+      sensorHistory.value = res.data.reverse().map(item => ({
+        temperature: item.temperature,
+        humidity: item.humidity,
+        pir: item.pir !== undefined ? Boolean(item.pir) : false,
+        gas_ppm: item.gas_ppm,
+        gas_alarm: item.gas_alarm,
+        timestamp: item.timestamp
+      }))
+    }
+  } catch (err) {
+    console.error('Lỗi khi tải lịch sử cảm biến:', err)
+  }
+}
+
+onMounted(() => {
+  fetchSensorHistory()
+})
+
+watch(() => props.sensors, (newVal) => {
+  if (newVal && newVal.timestamp) {
+    const exists = sensorHistory.value.some(item => item.timestamp === newVal.timestamp)
+    if (!exists) {
+      sensorHistory.value.push({
+        temperature: newVal.temperature,
+        humidity: newVal.humidity,
+        pir: newVal.motion,
+        gas_ppm: newVal.gasPpm,
+        gas_alarm: newVal.gasAlarm,
+        timestamp: newVal.timestamp
+      })
+      if (sensorHistory.value.length > 30) {
+        sensorHistory.value.shift()
+      }
+    }
+  }
+}, { deep: true })
+
+const tempChartOptions = computed(() => ({
+  chart: {
+    id: 'temp-chart',
+    type: 'area',
+    background: 'transparent',
+    toolbar: { show: false },
+    animations: { enabled: true, easing: 'linear', dynamicAnimation: { speed: 800 } }
+  },
+  colors: ['#f97316'],
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.35,
+      opacityTo: 0.02,
+      stops: [20, 100]
+    }
+  },
+  stroke: { curve: 'smooth', width: 2 },
+  grid: {
+    borderColor: '#1f2937',
+    strokeDashArray: 3,
+    xaxis: { lines: { show: false } },
+    yaxis: { lines: { show: true } }
+  },
+  xaxis: {
+    categories: sensorHistory.value.map(item => {
+      const parts = item.timestamp.split(' ')
+      return parts.length > 1 ? parts[1] : item.timestamp
+    }),
+    labels: {
+      show: true,
+      style: { colors: '#6b7280', fontSize: '8px' }
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false }
+  },
+  yaxis: {
+    labels: {
+      style: { colors: '#6b7280', fontSize: '8px' },
+      formatter: (val) => `${val.toFixed(1)}°C`
+    }
+  },
+  tooltip: {
+    theme: 'dark',
+    x: { show: true }
+  }
+}))
+
+const tempSeries = computed(() => [{
+  name: 'Nhiệt độ',
+  data: sensorHistory.value.map(item => item.temperature)
+}])
+
+const motionChartOptions = computed(() => ({
+  chart: {
+    id: 'motion-chart',
+    type: 'bar',
+    background: 'transparent',
+    toolbar: { show: false },
+    animations: { enabled: true }
+  },
+  colors: ['#10b981'],
+  plotOptions: {
+    bar: {
+      columnWidth: '50%',
+      borderRadius: 1
+    }
+  },
+  grid: {
+    borderColor: '#1f2937',
+    strokeDashArray: 3,
+    xaxis: { lines: { show: false } },
+    yaxis: { lines: { show: true } }
+  },
+  xaxis: {
+    categories: sensorHistory.value.map(item => {
+      const parts = item.timestamp.split(' ')
+      return parts.length > 1 ? parts[1] : item.timestamp
+    }),
+    labels: {
+      show: true,
+      style: { colors: '#6b7280', fontSize: '8px' }
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false }
+  },
+  yaxis: {
+    tickAmount: 1,
+    min: 0,
+    max: 1,
+    labels: {
+      style: { colors: '#6b7280', fontSize: '8px' },
+      formatter: (val) => val === 1 ? 'CÓ NGƯỜI' : 'TRỐNG'
+    }
+  },
+  tooltip: {
+    theme: 'dark',
+    x: { show: true },
+    y: {
+      formatter: (val) => val === 1 ? 'Phát hiện chuyển động' : 'Không có chuyển động'
+    }
+  }
+}))
+
+const motionSeries = computed(() => [{
+  name: 'Chuyển động',
+  data: sensorHistory.value.map(item => item.pir ? 1 : 0)
+}])
 
 watch(() => props.autoFanEnabled, (val) => { localAutoFanEnabled.value = val })
 watch(() => props.autoFanThreshold, (val) => { localAutoFanThreshold.value = val })
