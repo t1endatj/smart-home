@@ -7,7 +7,8 @@ from .ai_service import handle_ai_command
 from .automation import AutomationEngine
 from .config import WS_HOST, WS_PORT
 from .realtime import emit_home_state_delta
-from .schemas import AICommandRequest, ControlData, HomeStatePayload, SensorData
+from .schemas import AICommandRequest, ControlData, HomeStatePayload, SensorData, FaceRequest
+from .face_service import register_face, verify_face, delete_face, has_reference_face
 from .storage import (
     build_full_device_commands,
     get_current_home_payload,
@@ -138,3 +139,24 @@ def set_home_state(data: HomeStatePayload):
     updated_at, revision = save_home_state_payload(payload)
     emit_home_state_delta(ws_server, previous_payload, payload, revision, updated_at)
     return {"status": "ok", "updated_at": updated_at, "revision": revision}
+
+
+@app.post("/api/face/register")
+def api_register_face(req: FaceRequest):
+    return register_face(req.image)
+
+
+@app.post("/api/face/verify")
+def api_verify_face(req: FaceRequest):
+    return verify_face(req.image)
+
+
+@app.delete("/api/face/reference")
+def api_delete_face():
+    return delete_face()
+
+
+@app.get("/api/face/status")
+def api_face_status():
+    return {"registered": has_reference_face()}
+

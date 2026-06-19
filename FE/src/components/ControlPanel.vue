@@ -357,6 +357,108 @@
       </div>
     </div>
 
+    <!-- Xác Thực Face ID (Face Recognition) -->
+    <div class="flex flex-col gap-1.5 border-t border-gray-800/40 pt-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">📸 Xác Thực Face ID</span>
+        <div class="flex items-center gap-1.5">
+          <span 
+            :class="[
+              'h-2 w-2 rounded-full',
+              isFaceRegistered ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.75)]' : 'bg-gray-600'
+            ]" 
+          />
+          <span class="text-[9px] text-gray-400 font-medium">
+            {{ isFaceRegistered ? 'Đã có mẫu đối chiếu' : 'Chưa đăng ký mẫu' }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="flex flex-col gap-2 bg-white/[0.01] border border-gray-800/40 rounded-lg p-2">
+        <!-- Preview camera hoặc placeholder -->
+        <div class="relative overflow-hidden rounded-lg bg-black aspect-video flex items-center justify-center border border-gray-800">
+          <video 
+            v-if="cameraActive" 
+            ref="videoEl" 
+            autoplay 
+            playsinline 
+            class="w-full h-full object-cover"
+          />
+          <div v-else class="text-center p-4 text-[10px] text-gray-500 flex flex-col items-center gap-1">
+            <span>📷 Camera đang tắt</span>
+            <span class="text-[8px] text-gray-600">Bấm "Mở Camera" để đăng ký hoặc quét Face ID</span>
+          </div>
+          
+          <!-- Lớp phủ trạng thái -->
+          <div 
+            v-if="faceStatus" 
+            :class="[
+              'absolute inset-0 flex items-center justify-center text-xs font-bold text-center px-4 backdrop-blur-sm transition-all',
+              faceStatus === 'processing' ? 'bg-black/60 text-cyan-300' : '',
+              faceStatus === 'success' ? 'bg-emerald-950/85 text-emerald-300' : '',
+              faceStatus === 'failed' ? 'bg-red-950/85 text-red-300' : ''
+            ]"
+          >
+            <div class="flex flex-col items-center gap-1">
+              <span v-if="faceStatus === 'processing'" class="animate-spin text-lg">🔄</span>
+              <span v-if="faceStatus === 'success'" class="text-lg">✅</span>
+              <span v-if="faceStatus === 'failed'" class="text-lg">❌</span>
+              <span>{{ faceStatusText }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Các nút điều khiển camera & Face ID -->
+        <div class="flex flex-col gap-1.5">
+          <div class="flex gap-1.5">
+            <button 
+              type="button"
+              @click="cameraActive ? stopCamera() : startCamera()"
+              :class="[
+                'flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all text-center border cursor-pointer',
+                cameraActive 
+                  ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300' 
+                  : 'bg-cyan-600/10 hover:bg-cyan-600/20 border-cyan-500/30 text-cyan-300'
+              ]"
+            >
+              {{ cameraActive ? 'Tắt Camera' : 'Mở Camera' }}
+            </button>
+
+            <!-- Nút đăng ký khuôn mặt (khi camera bật và chưa có khuôn mặt đối chiếu) -->
+            <button 
+              v-if="cameraActive"
+              type="button"
+              @click="registerFaceTemplate"
+              class="flex-1 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/30 text-purple-300 py-1.5 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer"
+            >
+              Đăng Ký Mẫu
+            </button>
+          </div>
+
+          <!-- Nút Quét và Nút Xóa (hiển thị khi có ảnh đối chiếu) -->
+          <div v-if="isFaceRegistered || cameraActive" class="flex gap-1.5">
+            <button 
+              v-if="isFaceRegistered && cameraActive"
+              type="button"
+              @click="verifyFaceCapture"
+              class="flex-2 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 py-1.5 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer"
+            >
+              Quét Khuôn Mặt
+            </button>
+            <button 
+              v-if="isFaceRegistered"
+              type="button"
+              @click="deleteFaceTemplate"
+              class="flex-1 bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-red-400 py-1.5 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer"
+            >
+              Xóa Mẫu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- AI Command Input -->
     <div class="flex flex-col gap-1 border-t border-gray-800/40 pt-2 mt-0.5">
       <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">🤖 Trợ lý AI</div>
@@ -398,7 +500,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, computed } from 'vue'
+import { ref, watch, nextTick, onMounted, computed, onUnmounted } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
@@ -479,8 +581,183 @@ async function fetchSensorHistory() {
   }
 }
 
+const isFaceRegistered = ref(false)
+const cameraActive = ref(false)
+const videoEl = ref(null)
+const faceStatus = ref(null)
+const faceStatusText = ref('')
+let stream = null
+
+async function checkFaceStatus() {
+  try {
+    const res = await axios.get(`${API}/api/face/status`)
+    isFaceRegistered.value = Boolean(res.data?.registered)
+  } catch (err) {
+    console.error('Lỗi khi kiểm tra trạng thái đăng ký Face ID:', err)
+  }
+}
+
+async function startCamera() {
+  faceStatus.value = null
+  faceStatusText.value = ''
+  try {
+    cameraActive.value = true
+    await nextTick()
+    const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { width: 640, height: 480 } 
+    })
+    stream = mediaStream
+    if (videoEl.value) {
+      videoEl.value.srcObject = mediaStream
+    }
+    emit('add-log', { tag: 'SYSTEM', msg: 'Đã mở camera thành công.', type: 'info' })
+  } catch (err) {
+    cameraActive.value = false
+    console.error('Lỗi mở camera:', err)
+    emit('add-log', { tag: 'SYSTEM', msg: 'Lỗi: Không truy cập được Camera.', type: 'danger' })
+  }
+}
+
+function stopCamera() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop())
+    stream = null
+  }
+  cameraActive.value = false
+  if (videoEl.value) {
+    videoEl.value.srcObject = null
+  }
+}
+
+async function registerFaceTemplate() {
+  if (!videoEl.value) return
+
+  faceStatus.value = 'processing'
+  faceStatusText.value = 'Đang đăng ký khuôn mặt...'
+  emit('add-log', { tag: 'SYSTEM', msg: 'Đang gửi mẫu khuôn mặt đối chiếu...', type: 'info' })
+
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = videoEl.value.videoWidth || 640
+    canvas.height = videoEl.value.videoHeight || 480
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(videoEl.value, 0, 0, canvas.width, canvas.height)
+    
+    const base64Image = canvas.toDataURL('image/jpeg', 0.8)
+    
+    const res = await axios.post(`${API}/api/face/register`, {
+      image: base64Image
+    })
+
+    if (res.data && res.data.result === true) {
+      faceStatus.value = 'success'
+      faceStatusText.value = res.data.message || 'Đăng ký thành công!'
+      emit('add-log', { tag: 'SYSTEM', msg: 'Face ID: Đăng ký thành công mẫu đối chiếu.', type: 'success' })
+      isFaceRegistered.value = true
+      
+      setTimeout(() => {
+        faceStatus.value = null
+      }, 2000)
+    } else {
+      faceStatus.value = 'failed'
+      faceStatusText.value = res.data.message || 'Đăng ký thất bại!'
+      emit('add-log', { tag: 'SYSTEM', msg: `Face ID: Đăng ký thất bại - ${res.data.message}`, type: 'danger' })
+      
+      setTimeout(() => {
+        if (cameraActive.value) faceStatus.value = null
+      }, 3000)
+    }
+  } catch (err) {
+    console.error('Lỗi đăng ký khuôn mặt:', err)
+    faceStatus.value = 'failed'
+    faceStatusText.value = 'Lỗi hệ thống khi đăng ký.'
+    emit('add-log', { tag: 'SYSTEM', msg: 'Face ID: Lỗi kết nối đăng ký.', type: 'danger' })
+    
+    setTimeout(() => {
+      if (cameraActive.value) faceStatus.value = null
+    }, 3000)
+  }
+}
+
+async function verifyFaceCapture() {
+  if (!videoEl.value) return
+
+  faceStatus.value = 'processing'
+  faceStatusText.value = 'Đang so khớp khuôn mặt...'
+  emit('add-log', { tag: 'SYSTEM', msg: 'Đang chụp ảnh so khớp khuôn mặt...', type: 'info' })
+
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = videoEl.value.videoWidth || 640
+    canvas.height = videoEl.value.videoHeight || 480
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(videoEl.value, 0, 0, canvas.width, canvas.height)
+    
+    const base64Image = canvas.toDataURL('image/jpeg', 0.8)
+    
+    const res = await axios.post(`${API}/api/face/verify`, {
+      image: base64Image
+    })
+
+    if (res.data && res.data.result === true) {
+      faceStatus.value = 'success'
+      faceStatusText.value = 'Xác thực thành công! Đang mở cửa chính.'
+      emit('add-log', { tag: 'SYSTEM', msg: 'Face ID: Xác thực khuôn mặt khớp thành công.', type: 'success' })
+      
+      // Mở cửa chính nếu đang khóa
+      if (props.deviceStates['Cửa Chính'] === false) {
+        emit('toggle', 'Cửa Chính')
+      }
+      
+      setTimeout(() => {
+        stopCamera()
+        faceStatus.value = null
+      }, 2000)
+    } else {
+      const errMsg = res.data.message || res.data.error || 'Khuôn mặt không khớp.'
+      faceStatus.value = 'failed'
+      faceStatusText.value = 'Xác thực thất bại! Khuôn mặt không trùng khớp.'
+      emit('add-log', { tag: 'SYSTEM', msg: `Face ID: Xác thực thất bại - ${errMsg}`, type: 'danger' })
+      
+      setTimeout(() => {
+        if (cameraActive.value) faceStatus.value = null
+      }, 3000)
+    }
+  } catch (err) {
+    console.error('Lỗi xác thực khuôn mặt:', err)
+    faceStatus.value = 'failed'
+    faceStatusText.value = 'Lỗi hệ thống khi so khớp.'
+    emit('add-log', { tag: 'SYSTEM', msg: 'Face ID: Lỗi kết nối máy chủ.', type: 'danger' })
+    
+    setTimeout(() => {
+      if (cameraActive.value) faceStatus.value = null
+    }, 3000)
+  }
+}
+
+async function deleteFaceTemplate() {
+  if (!confirm('Bạn có chắc chắn muốn xóa ảnh đối chiếu hiện tại để đăng ký lại không?')) return
+  try {
+    const res = await axios.delete(`${API}/api/face/reference`)
+    if (res.data && res.data.result === true) {
+      isFaceRegistered.value = false
+      stopCamera()
+      faceStatus.value = null
+      emit('add-log', { tag: 'SYSTEM', msg: 'Face ID: Đã xóa ảnh đối chiếu thành công.', type: 'info' })
+    }
+  } catch (err) {
+    console.error('Lỗi khi xóa khuôn mặt đối chiếu:', err)
+    emit('add-log', { tag: 'SYSTEM', msg: 'Face ID: Không thể xóa ảnh đối chiếu.', type: 'danger' })
+  }
+}
+
+onUnmounted(() => {
+  stopCamera()
+})
+
 onMounted(() => {
   fetchSensorHistory()
+  checkFaceStatus()
 })
 
 watch(() => props.sensors, (newVal) => {

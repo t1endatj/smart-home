@@ -26,3 +26,8 @@ class HomeStatePayload(BaseModel):
     fanSpeeds: dict | None = None
     logs: list | None = None
     automation: dict | None = None
+
+
+class FaceRequest(BaseModel):
+    image: str
+
