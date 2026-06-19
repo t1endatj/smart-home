@@ -8,12 +8,14 @@ import numpy as np
 # Đường dẫn thư mục
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODELS_DIR = BASE_DIR / "models"
-REFERENCE_IMAGE_PATH = BASE_DIR / "reference_face.jpg"
+FACES_DIR = BASE_DIR / "faces"
+
+# Đảm bảo thư mục faces tồn tại
+FACES_DIR.mkdir(parents=True, exist_ok=True)
 
 # URL tải mô hình ONNX
 YUNET_URL = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
 SFACE_URL = "https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx"
-
 
 YUNET_PATH = MODELS_DIR / "face_detection_yunet_2023mar.onnx"
 SFACE_PATH = MODELS_DIR / "face_recognition_sface_2021dec.onnx"
@@ -32,7 +34,6 @@ def download_file(url: str, dest_path: Path):
     try:
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         print(f"[FaceService] Downloading {url} to {dest_path}...")
-        # Sử dụng request chuyên biệt có cấu hình User-Agent để tránh bị chặn
         req = urllib.request.Request(
             url,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -46,28 +47,21 @@ def download_file(url: str, dest_path: Path):
 
 
 def init_models():
-    """Khởi tạo mô hình phát hiện (YuNet) và nhận dạng (SFace).
-
-    Nếu không có, tự động tải xuống. Nếu tải hoặc nạp thất bại, kích hoạt chế độ fallback.
-    """
+    """Khởi tạo mô hình phát hiện (YuNet) và nhận dạng (SFace)."""
     global _detector, _recognizer, _use_fallback
 
     if _use_fallback:
         return
 
-    # Nếu đã khởi tạo thành công trước đó
     if _detector is not None and _recognizer is not None:
         return
 
     try:
-        # Tải mô hình nếu chưa có
         if not YUNET_PATH.exists():
             download_file(YUNET_URL, YUNET_PATH)
         if not SFACE_PATH.exists():
             download_file(SFACE_URL, SFACE_PATH)
 
-        # Nạp mô hình YuNet
-        # Lưu ý: Cần set input size tạm thời (ví dụ: 320x320), sau này khi detect sẽ cập nhật theo ảnh đầu vào
         _detector = cv2.FaceDetectorYN.create(
             model=str(YUNET_PATH),
             config="",
@@ -79,7 +73,6 @@ def init_models():
             target_id=cv2.dnn.DNN_TARGET_CPU
         )
 
-        # Nạp mô hình SFace
         _recognizer = cv2.FaceRecognizerSF.create(
             model=str(SFACE_PATH),
             config="",
@@ -95,7 +88,7 @@ def init_models():
 
 
 def decode_base64_image(base64_str: str) -> np.ndarray | None:
-    """Giải mã chuỗi base64 thành ảnh OpenCV (numpy array BGR)."""
+    """Giải mã chuỗi base64 thành ảnh BGR."""
     try:
         if "," in base64_str:
             _, encoded = base64_str.split(",", 1)
@@ -122,7 +115,6 @@ def detect_and_crop_face_fallback(img: np.ndarray) -> np.ndarray | None:
         if len(faces) == 0:
             return None
         
-        # Cắt khuôn mặt đầu tiên phát hiện được và chuyển về size 128x128
         x, y, w, h = faces[0]
         face_img = gray[y:y+h, x:x+w]
         return cv2.resize(face_img, (128, 128))
@@ -132,7 +124,7 @@ def detect_and_crop_face_fallback(img: np.ndarray) -> np.ndarray | None:
 
 
 def verify_face_fallback(ref_img: np.ndarray, query_img: np.ndarray) -> bool:
-    """Fallback: So khớp hai mặt dùng thuật toán trích xuất đặc trưng ORB."""
+    """Fallback: So khớp hai mặt dùng thuật toán ORB."""
     try:
         ref_face = detect_and_crop_face_fallback(ref_img)
         query_face = detect_and_crop_face_fallback(query_img)
@@ -140,7 +132,6 @@ def verify_face_fallback(ref_img: np.ndarray, query_img: np.ndarray) -> bool:
         if ref_face is None or query_face is None:
             return False
 
-        # Khởi tạo bộ trích xuất đặc trưng ORB
         orb = cv2.ORB_create(nfeatures=500)
         kp1, des1 = orb.detectAndCompute(ref_face, None)
         kp2, des2 = orb.detectAndCompute(query_face, None)
@@ -148,14 +139,10 @@ def verify_face_fallback(ref_img: np.ndarray, query_img: np.ndarray) -> bool:
         if des1 is None or des2 is None:
             return False
 
-        # Đối sánh đặc trưng qua BFMatcher
         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
         matches = bf.match(des1, des2)
-        
-        # Lọc các điểm khớp có khoảng cách nhỏ (tương đồng cao)
         good_matches = [m for m in matches if m.distance < 50]
         
-        # Nếu có tối thiểu 15 điểm khớp chất lượng tốt
         print(f"[FaceService] ORB Fallback matches: {len(good_matches)}")
         return len(good_matches) >= 15
     except Exception as exc:
@@ -164,104 +151,87 @@ def verify_face_fallback(ref_img: np.ndarray, query_img: np.ndarray) -> bool:
 
 # ----------------- MAIN SERVICE FUNCTIONS -----------------
 
-def register_face(base64_str: str) -> dict:
-    """Đăng ký khuôn mặt gốc (lưu làm reference_face.jpg)."""
-    img = decode_base64_image(base64_str)
-    if img is None:
-        return {"result": False, "message": "Dữ liệu ảnh không hợp lệ."}
-
-    init_models()
-
-    if _use_fallback:
-        # Sử dụng Haar Cascade để kiểm thử khuôn mặt trước khi lưu
-        face = detect_and_crop_face_fallback(img)
-        if face is None:
-            return {"result": False, "message": "Không tìm thấy khuôn mặt trong ảnh để đăng ký."}
-    else:
-        # Sử dụng YuNet
-        h, w, _ = img.shape
-        _detector.setInputSize((w, h))
-        retval, faces = _detector.detect(img)
-        if retval == 0 or faces is None:
-            return {"result": False, "message": "Không tìm thấy khuôn mặt trong ảnh để đăng ký."}
-
-    # Lưu ảnh đối chiếu gốc
-    try:
-        cv2.imwrite(str(REFERENCE_IMAGE_PATH), img)
-        print(f"[FaceService] Registered new face template to {REFERENCE_IMAGE_PATH}")
-        return {"result": True, "message": "Đăng ký khuôn mặt đối chiếu thành công!"}
-    except Exception as exc:
-        return {"result": False, "message": f"Không thể lưu ảnh đối chiếu: {exc}"}
-
-
 def verify_face(base64_str: str) -> dict:
-    """So khớp khuôn mặt base64 nhận được với khuôn mặt đối chiếu đã lưu."""
-    if not REFERENCE_IMAGE_PATH.exists():
-        return {"result": False, "error": "Chưa đăng ký khuôn mặt đối chiếu."}
-
+    """Giải mã ảnh quét và so khớp với toàn bộ các ảnh chân dung có trong thư mục faces/."""
     query_img = decode_base64_image(base64_str)
     if query_img is None:
         return {"result": False, "error": "Ảnh chụp từ camera không hợp lệ."}
 
-    ref_img = cv2.imread(str(REFERENCE_IMAGE_PATH))
-    if ref_img is None:
-        return {"result": False, "error": "Tệp đối chiếu cũ bị hỏng hoặc lỗi."}
+    # Quét tất cả các tệp hình ảnh trong thư mục faces
+    valid_suffixes = {".jpg", ".jpeg", ".png"}
+    face_files = [p for p in FACES_DIR.iterdir() if p.suffix.lower() in valid_suffixes]
+
+    if not face_files:
+        return {
+            "result": False,
+            "error": "Thư mục đối chiếu trống. Hãy thêm ít nhất một ảnh chân dung vào thư mục BE/faces/."
+        }
 
     init_models()
 
-    # Chạy Fallback nếu được kích hoạt
-    if _use_fallback:
-        matched = verify_face_fallback(ref_img, query_img)
-        return {"result": matched, "method": "fallback_orb"}
+    # Trích xuất đặc trưng của ảnh quét mới (nếu không dùng fallback)
+    feat_query = None
+    faces_q = None
+    if not _use_fallback:
+        try:
+            h_q, w_q, _ = query_img.shape
+            _detector.setInputSize((w_q, h_q))
+            retval_q, faces_q = _detector.detect(query_img)
+            if retval_q > 0 and faces_q is not None:
+                face_query_align = _recognizer.alignCrop(query_img, faces_q[0])
+                feat_query = _recognizer.feature(face_query_align)
+            else:
+                return {"result": False, "message": "Không phát hiện thấy khuôn mặt trong ảnh quét."}
+        except Exception as exc:
+            print(f"[FaceService] SFace error on query image. Activating fallback: {exc}")
+            # Nếu gặp lỗi dnn khi trích xuất query image, tự kích hoạt fallback
+            pass
 
-    try:
-        # 1. Phát hiện khuôn mặt trong ảnh đối chiếu
-        h_ref, w_ref, _ = ref_img.shape
-        _detector.setInputSize((w_ref, h_ref))
-        retval_ref, faces_ref = _detector.detect(ref_img)
-        if retval_ref == 0 or faces_ref is None:
-            return {"result": False, "error": "Khuôn mặt đối chiếu đã lưu không rõ nét."}
+    # Duyệt qua từng ảnh mẫu trong thư mục để so khớp
+    for file_path in face_files:
+        ref_img = cv2.imread(str(file_path))
+        if ref_img is None:
+            continue
 
-        # 2. Phát hiện khuôn mặt trong ảnh quét mới
-        h_q, w_q, _ = query_img.shape
-        _detector.setInputSize((w_q, h_q))
-        retval_q, faces_q = _detector.detect(query_img)
-        if retval_q == 0 or faces_q is None:
-            return {"result": False, "message": "Không phát hiện thấy khuôn mặt trong ảnh quét."}
+        # Chạy thuật toán chính hoặc fallback
+        if not _use_fallback and feat_query is not None:
+            try:
+                h_ref, w_ref, _ = ref_img.shape
+                _detector.setInputSize((w_ref, h_ref))
+                retval_ref, faces_ref = _detector.detect(ref_img)
+                if retval_ref == 0 or faces_ref is None:
+                    continue
 
-        # 3. Cắt và xoay chỉnh khuôn mặt (Align & Crop)
-        face_ref_align = _recognizer.alignCrop(ref_img, faces_ref[0])
-        face_query_align = _recognizer.alignCrop(query_img, faces_q[0])
+                face_ref_align = _recognizer.alignCrop(ref_img, faces_ref[0])
+                feat_ref = _recognizer.feature(face_ref_align)
 
-        # 4. Trích xuất đặc trưng khuôn mặt (Face Embeddings)
-        feat_ref = _recognizer.feature(face_ref_align)
-        feat_query = _recognizer.feature(face_query_align)
+                cosine_score = _recognizer.match(feat_ref, feat_query, cv2.FaceRecognizerSF_FR_COSINE)
+                if cosine_score >= COSINE_THRESHOLD:
+                    print(f"[FaceService] Match found: {file_path.name} (score: {cosine_score:.4f})")
+                    return {
+                        "result": True,
+                        "name": file_path.stem,
+                        "score": float(cosine_score),
+                        "method": "sface"
+                    }
+            except Exception as exc:
+                print(f"[FaceService] Error processing template {file_path.name} with SFace: {exc}")
+                # Thử dùng fallback ORB cho ảnh này
+                if verify_face_fallback(ref_img, query_img):
+                    return {
+                        "result": True,
+                        "name": file_path.stem,
+                        "method": "fallback_orb"
+                    }
+        else:
+            # Chế độ Fallback ORB
+            if verify_face_fallback(ref_img, query_img):
+                print(f"[FaceService] Match found in fallback: {file_path.name}")
+                return {
+                    "result": True,
+                    "name": file_path.stem,
+                    "method": "fallback_orb"
+                }
 
-        # 5. Tính toán khoảng cách Cosine Similarity
-        cosine_score = _recognizer.match(feat_ref, feat_query, cv2.FaceRecognizerSF_FR_COSINE)
-        matched = cosine_score >= COSINE_THRESHOLD
-
-        print(f"[FaceService] Cosine similarity: {cosine_score:.4f} (Matched: {matched})")
-        return {"result": bool(matched), "score": float(cosine_score), "method": "sface"}
-
-    except Exception as exc:
-        print(f"[FaceService] SFace verify error: {exc}. Trying fallback...")
-        matched = verify_face_fallback(ref_img, query_img)
-        return {"result": matched, "method": "fallback_orb"}
-
-
-def delete_face() -> dict:
-    """Xóa ảnh đối chiếu đã lưu."""
-    try:
-        if REFERENCE_IMAGE_PATH.exists():
-            REFERENCE_IMAGE_PATH.unlink()
-            print("[FaceService] Deleted face template file.")
-            return {"result": True, "message": "Đã xóa ảnh khuôn mặt đối chiếu."}
-        return {"result": True, "message": "Không có khuôn mặt nào để xóa."}
-    except Exception as exc:
-        return {"result": False, "message": f"Lỗi khi xóa ảnh đối chiếu: {exc}"}
-
-
-def has_reference_face() -> bool:
-    """Kiểm tra xem đã có ảnh đối chiếu chưa."""
-    return REFERENCE_IMAGE_PATH.exists()
+    # Không khớp với bất kỳ ảnh nào
+    return {"result": False, "message": "Khuôn mặt không trùng khớp với bất kỳ mẫu nào."}
