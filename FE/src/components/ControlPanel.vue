@@ -134,7 +134,11 @@
         </div>
       </div>
 
-      <div class="bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 h-[150px] flex items-center justify-center relative overflow-hidden">
+      <div 
+        @click="openChartModal" 
+        class="bg-[#0f0f14] border border-gray-800/40 rounded-xl p-2 h-[150px] flex items-center justify-center relative overflow-hidden cursor-zoom-in hover:border-orange-500/20 transition-all w-full"
+        title="Bấm để xem biểu đồ phóng to"
+      >
         <!-- Vùng hiển thị biểu đồ nhiệt độ -->
         <div v-show="activeChartTab === 'temp'" class="w-full h-full">
           <apexchart 
@@ -366,7 +370,11 @@
       
       <div class="flex flex-col gap-2 bg-white/[0.01] border border-gray-800/40 rounded-lg p-2">
         <!-- Preview camera hoặc placeholder -->
-        <div class="relative overflow-hidden rounded-lg bg-black aspect-video flex items-center justify-center border border-gray-800">
+        <div 
+          @click="openCameraModal" 
+          class="relative overflow-hidden rounded-lg bg-black aspect-video flex items-center justify-center border border-gray-800 cursor-zoom-in hover:border-cyan-500/30 transition-all"
+          title="Bấm để phóng to camera"
+        >
           <video 
             v-show="cameraActive" 
             ref="videoEl" 
@@ -465,6 +473,179 @@
         </button>
       </form>
     </div>
+
+    <!-- Camera Modal Overlay -->
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div 
+        v-if="isCameraModalOpen" 
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+        @click.self="closeCameraModal"
+      >
+        <div class="relative w-full max-w-2xl bg-[#18181c] border border-gray-800/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between border-b border-gray-800 px-4 py-3 bg-[#131316]">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              📷 Camera Face ID (Phóng to)
+            </h3>
+            <button 
+              type="button" 
+              @click="closeCameraModal" 
+              class="text-gray-400 hover:text-white text-sm font-bold p-1 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Video content -->
+          <div class="relative aspect-video bg-black flex items-center justify-center">
+            <video 
+              ref="videoElModal" 
+              autoplay 
+              playsinline 
+              muted 
+              class="w-full h-full object-cover"
+            />
+            
+            <!-- Lớp phủ trạng thái -->
+            <div 
+              v-if="faceStatus" 
+              :class="[
+                'absolute inset-0 flex items-center justify-center text-xs font-bold text-center px-6 backdrop-blur-sm transition-all',
+                faceStatus === 'processing' ? 'bg-black/60 text-cyan-300' : '',
+                faceStatus === 'success' ? 'bg-emerald-950/85 text-emerald-300' : '',
+                faceStatus === 'failed' ? 'bg-red-950/85 text-red-300' : ''
+              ]"
+            >
+              <div class="flex flex-col items-center gap-1.5">
+                <span v-if="faceStatus === 'processing'" class="animate-spin text-lg">🔄</span>
+                <span v-if="faceStatus === 'success'" class="text-lg">✅</span>
+                <span v-if="faceStatus === 'failed'" class="text-lg">❌</span>
+                <span class="text-xs">{{ faceStatusText }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="p-3 flex gap-2.5 bg-[#111113] border-t border-gray-800/80">
+            <button 
+              type="button"
+              @click="cameraActive ? stopCameraFromModal() : startCamera()"
+              class="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 cursor-pointer"
+            >
+              {{ cameraActive ? 'Tắt Camera' : 'Mở Camera' }}
+            </button>
+            <button 
+              v-if="cameraActive"
+              type="button"
+              @click="verifyFaceCapture"
+              class="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-300 border border-emerald-500/30 cursor-pointer"
+            >
+              Quét Khuôn Mặt
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Chart Modal Overlay -->
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div 
+        v-if="isChartModalOpen" 
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+        @click.self="closeChartModal"
+      >
+        <div class="relative w-full max-w-3xl bg-[#18181c] border border-gray-800/80 rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between border-b border-gray-800/80 pb-3">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              📊 Biểu đồ lịch sử cảm biến (Phóng to)
+            </h3>
+            
+            <div class="flex items-center gap-4">
+              <!-- Tab selection inside modal -->
+              <div class="flex bg-gray-900 border border-gray-800 rounded-lg p-0.5 gap-0.5">
+                <button 
+                  type="button"
+                  @click="activeChartTab = 'temp'"
+                  :class="[
+                    'px-2.5 py-0.5 rounded text-[9px] font-bold uppercase transition-all cursor-pointer',
+                    activeChartTab === 'temp' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
+                  ]"
+                >
+                  Nhiệt độ
+                </button>
+                <button 
+                  type="button"
+                  @click="activeChartTab = 'motion'"
+                  :class="[
+                    'px-2.5 py-0.5 rounded text-[9px] font-bold uppercase transition-all cursor-pointer',
+                    activeChartTab === 'motion' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
+                  ]"
+                >
+                  Chuyển động
+                </button>
+              </div>
+
+              <button 
+                type="button" 
+                @click="closeChartModal" 
+                class="text-gray-400 hover:text-white text-sm font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Enlarged Chart Content -->
+          <div class="bg-[#0f0f14] border border-gray-800/40 rounded-xl p-3 h-[300px] flex items-center justify-center relative overflow-hidden">
+            <div v-show="activeChartTab === 'temp'" class="w-full h-full">
+              <apexchart 
+                v-if="sensorHistory.length > 0"
+                height="100%"
+                width="100%"
+                :options="tempChartOptionsModal" 
+                :series="tempSeries"
+              />
+              <div v-else class="text-[10px] text-gray-500 flex items-center justify-center h-full w-full">
+                Đang tải dữ liệu nhiệt độ...
+              </div>
+            </div>
+
+            <div v-show="activeChartTab === 'motion'" class="w-full h-full">
+              <apexchart 
+                v-if="sensorHistory.length > 0"
+                height="100%"
+                width="100%"
+                :options="motionChartOptionsModal" 
+                :series="motionSeries"
+              />
+              <div v-else class="text-[10px] text-gray-500 flex items-center justify-center h-full w-full">
+                Đang tải dữ liệu chuyển động...
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tip -->
+          <div class="text-[9px] text-gray-500 text-center uppercase tracking-wide">
+            💡 Rê chuột vào các điểm dữ liệu để xem thông số chi tiết
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -556,6 +737,45 @@ const faceStatus = ref(null)
 const faceStatusText = ref('')
 let stream = null
 
+const isChartModalOpen = ref(false)
+const isCameraModalOpen = ref(false)
+const videoElModal = ref(null)
+
+function openChartModal() {
+  isChartModalOpen.value = true
+}
+
+function closeChartModal() {
+  isChartModalOpen.value = false
+}
+
+function openCameraModal() {
+  if (!cameraActive.value) return
+  isCameraModalOpen.value = true
+  nextTick(() => {
+    if (videoElModal.value && stream) {
+      videoElModal.value.srcObject = stream
+      videoElModal.value.play().catch(e => console.error("Error playing modal video:", e))
+    }
+  })
+}
+
+function closeCameraModal() {
+  isCameraModalOpen.value = false
+  nextTick(() => {
+    if (videoEl.value && stream) {
+      videoEl.value.srcObject = stream
+      videoEl.value.play().catch(e => console.error("Error playing small video:", e))
+    }
+  })
+}
+
+function stopCameraFromModal() {
+  stopCamera()
+  closeCameraModal()
+}
+
+
 async function startCamera() {
   faceStatus.value = null
   faceStatusText.value = ''
@@ -589,7 +809,8 @@ function stopCamera() {
 }
 
 async function verifyFaceCapture() {
-  if (!videoEl.value) return
+  const activeVideo = isCameraModalOpen.value ? videoElModal.value : videoEl.value
+  if (!activeVideo) return
 
   faceStatus.value = 'processing'
   faceStatusText.value = 'Đang quét khuôn mặt...'
@@ -597,10 +818,10 @@ async function verifyFaceCapture() {
 
   try {
     const canvas = document.createElement('canvas')
-    canvas.width = videoEl.value.videoWidth || 640
-    canvas.height = videoEl.value.videoHeight || 480
+    canvas.width = activeVideo.videoWidth || 640
+    canvas.height = activeVideo.videoHeight || 480
     const ctx = canvas.getContext('2d')
-    ctx.drawImage(videoEl.value, 0, 0, canvas.width, canvas.height)
+    ctx.drawImage(activeVideo, 0, 0, canvas.width, canvas.height)
     
     const base64Image = canvas.toDataURL('image/jpeg', 0.8)
     
@@ -621,6 +842,7 @@ async function verifyFaceCapture() {
       
       setTimeout(() => {
         stopCamera()
+        closeCameraModal()
         faceStatus.value = null
       }, 2500)
     } else {
@@ -644,6 +866,7 @@ async function verifyFaceCapture() {
     }, 3000)
   }
 }
+
 
 onUnmounted(() => {
   stopCamera()
@@ -789,6 +1012,57 @@ const motionSeries = computed(() => [{
   name: 'Chuyển động',
   data: sensorHistory.value.map(item => item.pir ? 1 : 0)
 }])
+
+const tempChartOptionsModal = computed(() => {
+  const base = tempChartOptions.value
+  return {
+    ...base,
+    chart: {
+      ...base.chart,
+      id: 'temp-chart-modal'
+    },
+    xaxis: {
+      ...base.xaxis,
+      labels: {
+        ...base.xaxis.labels,
+        style: { ...base.xaxis.labels.style, fontSize: '10px' }
+      }
+    },
+    yaxis: {
+      ...base.yaxis,
+      labels: {
+        ...base.yaxis.labels,
+        style: { ...base.yaxis.labels.style, fontSize: '10px' }
+      }
+    }
+  }
+})
+
+const motionChartOptionsModal = computed(() => {
+  const base = motionChartOptions.value
+  return {
+    ...base,
+    chart: {
+      ...base.chart,
+      id: 'motion-chart-modal'
+    },
+    xaxis: {
+      ...base.xaxis,
+      labels: {
+        ...base.xaxis.labels,
+        style: { ...base.xaxis.labels.style, fontSize: '10px' }
+      }
+    },
+    yaxis: {
+      ...base.yaxis,
+      labels: {
+        ...base.yaxis.labels,
+        style: { ...base.yaxis.labels.style, fontSize: '10px' }
+      }
+    }
+  }
+})
+
 
 watch(() => props.autoFanEnabled, (val) => { localAutoFanEnabled.value = val })
 watch(() => props.autoFanThreshold, (val) => { localAutoFanThreshold.value = val })
