@@ -681,6 +681,9 @@ const tempChartOptions = computed(() => ({
     animations: { enabled: true, easing: 'linear', dynamicAnimation: { speed: 800 } }
   },
   colors: ['#f97316'],
+  dataLabels: {
+    enabled: false
+  },
   fill: {
     type: 'gradient',
     gradient: {
@@ -736,6 +739,9 @@ const motionChartOptions = computed(() => ({
     animations: { enabled: true }
   },
   colors: ['#10b981'],
+  dataLabels: {
+    enabled: false
+  },
   plotOptions: {
     bar: {
       columnWidth: '50%',
