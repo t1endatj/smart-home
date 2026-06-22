@@ -315,7 +315,10 @@ def build_device_commands(previous_payload: dict, next_payload: dict) -> list[di
             and normalize_fan_speed_value(previous_speeds.get(device_name)) != next_speed
         )
         if not status_changed and not speed_changed:
-            continue
+            if device_name in DOOR_DEVICE_NAMES and next_status is False:
+                pass # Allow sending close command for doors even if already closed
+            else:
+                continue
         command = {
             "device": device_name,
             "key": DEVICE_API_KEYS.get(device_name, "unknown"),

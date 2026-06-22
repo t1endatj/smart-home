@@ -327,8 +327,11 @@ function lockStateSync(durationMs = 1800) {
   nextSyncAllowedAt = Math.max(nextSyncAllowedAt, Date.now() + durationMs)
 }
 
+let isApplyingState = false
+
 function applyHomeState(payload) {
   if (!payload || typeof payload !== 'object') return
+  isApplyingState = true
   if (payload.deviceStates && typeof payload.deviceStates === 'object') {
     deviceStates.value = { ...DEFAULT_DEVICE_STATES, ...payload.deviceStates }
   }
@@ -350,6 +353,9 @@ function applyHomeState(payload) {
   if (typeof payload.automation?.autoTemperatureThreshold === 'number') {
     autoFanThreshold.value = payload.automation.autoTemperatureThreshold
   }
+  setTimeout(() => {
+    isApplyingState = false
+  }, 50)
 }
 
 async function syncHomeState() {
@@ -394,7 +400,8 @@ async function persistHomeState() {
     const committedRevision = Number(res?.data?.revision || 0)
     latestAppliedRevision = committedRevision
     pendingLocalRevision = committedRevision
-    lockStateSync(800)
+    // Giảm thời gian lock khi persist thành công để nhận update nhanh hơn
+    lockStateSync(500)
   } catch (error) {
     pendingLocalRevision = latestAppliedRevision
     throw error
@@ -404,7 +411,8 @@ async function persistHomeState() {
 }
 
 function schedulePersistHomeState() {
-  lockStateSync()
+  if (isApplyingState) return
+  lockStateSync(1000)
   pendingLocalRevision = latestAppliedRevision + 1
   clearTimeout(persistTimer)
   persistTimer = setTimeout(() => {
@@ -436,18 +444,15 @@ function logToConsole(device, state, source, speed = null) {
   if (device.startsWith('Đèn')) {
     tag = 'LIGHT'
     msg = `${state ? 'BẬT' : 'TẮT'} ${device.toLowerCase()}`
-    addLog(tag, msg, state ? 'success' : 'info')
-    addLog('RELAY', `Kích hoạt Rơ-le Kênh ${getRelayChannel(device)} (${state ? 'BẬT' : 'TẮT'})`, 'warning')
+    if (!isApplyingState) addLog(tag, msg, state ? 'success' : 'info')
   } else if (device.startsWith('Quạt')) {
     tag = 'FAN'
     msg = `${state ? 'BẬT' : 'TẮT'} ${device.toLowerCase()}${state && speed ? ` ${speed}%` : ''}`
-    addLog(tag, msg, state ? 'success' : 'info')
-    addLog('RELAY', `Kích hoạt Rơ-le Kênh ${getRelayChannel(device)} (${state ? 'BẬT' : 'TẮT'}${state && speed ? ` / ${speed}%` : ''})`, 'warning')
+    if (!isApplyingState) addLog(tag, msg, state ? 'success' : 'info')
   } else if (device.startsWith('Cửa')) {
     tag = 'DOOR'
     msg = `${state ? 'MỞ KHÓA' : 'ĐÓNG KHÓA'} ${device.toLowerCase()}`
-    addLog(tag, msg, state ? 'success' : 'info')
-    addLog('RELAY', `${state ? 'Mở khóa' : 'Khóa'} chốt điện từ`, 'warning')
+    if (!isApplyingState) addLog(tag, msg, state ? 'success' : 'info')
   }
 }
 
@@ -481,7 +486,7 @@ function mapDeviceToApiKey(name) {
 async function toggleDevice(name, source = 'UI Panel') {
   if (deviceStates.value[name] === undefined) return
 
-  lockStateSync()
+  lockStateSync(1000)
   deviceStates.value[name] = !deviceStates.value[name]
   const isON = deviceStates.value[name]
   const speed = name.startsWith('Quạt') ? fanSpeeds.value[name] : null
@@ -514,14 +519,14 @@ async function handleSetFanSpeed({ name, speed, shouldTurnOn = true, source = 'U
   if (fanSpeeds.value[name] === undefined) return
   if (speed < 10 || speed > 100) return
 
-  lockStateSync()
+  lockStateSync(1000)
   fanSpeeds.value[name] = speed
   const isOn = shouldTurnOn ? true : Boolean(deviceStates.value[name])
   if (shouldTurnOn) {
     deviceStates.value[name] = true
   }
 
-  addLog('FAN', `${name} chuyển sang ${speed}%${isOn ? '' : ' (ghi nhớ)'}`, 'info')
+  if (!isApplyingState) addLog('FAN', `${name} chuyển sang ${speed}%${isOn ? '' : ' (ghi nhớ)'}`, 'info')
 
   try {
     await axios.post(`${API}/api/control`, {
@@ -537,17 +542,16 @@ async function handleSetFanSpeed({ name, speed, shouldTurnOn = true, source = 'U
 }
 
 function runScenario(type) {
-  lockStateSync(2500)
+  lockStateSync(2000)
   if (type === 'welcome') {
-    addLog('SYSTEM', 'Kịch bản: VỀ NHÀ', 'info')
-    addLog('ALERT', 'Gửi thông báo: Bot Telegram', 'info')
+    if (!isApplyingState) addLog('SYSTEM', 'Kịch bản: VỀ NHÀ', 'info')
     if (!deviceStates.value['Cửa Chính']) toggleDevice('Cửa Chính', 'Scenario Auto')
     if (!deviceStates.value['Đèn Hành Lang']) toggleDevice('Đèn Hành Lang', 'Scenario Auto')
     if (!deviceStates.value['Đèn Chùm Trung Tâm']) toggleDevice('Đèn Chùm Trung Tâm', 'Scenario Auto')
     if (!deviceStates.value['Quạt Trần Phòng Khách']) toggleDevice('Quạt Trần Phòng Khách', 'Scenario Auto')
   } 
   else if (type === 'sleep') {
-    addLog('SYSTEM', 'Kịch bản: ĐI NGỦ', 'info')
+    if (!isApplyingState) addLog('SYSTEM', 'Kịch bản: ĐI NGỦ', 'info')
     ['Cửa Chính', 'Cửa Nhà Vệ Sinh', 'Cửa Phòng Ngủ', 'Cửa Nhà Bếp', 'Cửa Khu KT'].forEach(door => {
       if (deviceStates.value[door]) toggleDevice(door, 'Scenario Auto')
     })
@@ -561,9 +565,7 @@ function runScenario(type) {
     if (!deviceStates.value['Quạt Phòng Ngủ']) toggleDevice('Quạt Phòng Ngủ', 'Scenario Auto')
   } 
   else if (type === 'sos') {
-    addLog('MQ2', 'Khói vượt ngưỡng: 380 ppm', 'danger')
-    addLog('ALERT', 'Gửi báo động: Telegram + Còi', 'danger')
-    addLog('RELAY', 'Bật quạt hút bếp tự động', 'warning')
+    if (!isApplyingState) addLog('MQ2', 'Khói vượt ngưỡng / Cảnh báo Gas', 'danger')
     ['Cửa Chính', 'Cửa Nhà Vệ Sinh', 'Cửa Phòng Ngủ', 'Cửa Nhà Bếp', 'Cửa Khu KT'].forEach(door => {
       if (!deviceStates.value[door]) toggleDevice(door, 'Scenario Auto')
     })
@@ -575,9 +577,7 @@ function runScenario(type) {
     })
   } 
   else if (type === 'alloff') {
-    addLog('SYSTEM', 'Kịch bản: TẮT HẾT', 'info')
-    addLog('MQ2', 'Khói giảm - Bình thường', 'success')
-    addLog('ALERT', 'Tắt còi báo động - An toàn', 'success')
+    if (!isApplyingState) addLog('SYSTEM', 'Kịch bản: TẮT HẾT', 'info')
     Object.keys(deviceStates.value).forEach(device => {
       if (deviceStates.value[device]) toggleDevice(device, 'Scenario Auto')
     })
@@ -587,9 +587,9 @@ function runScenario(type) {
 async function handleAICommand(command) {
   if (aiLoading.value) return
 
-  lockStateSync(4000)
+  lockStateSync(3000)
   aiLoading.value = true
-  addLog('SYSTEM', `Đang gửi lệnh AI: "${command}"...`, 'info')
+  if (!isApplyingState) addLog('SYSTEM', `Đang gửi lệnh AI: "${command}"...`, 'info')
   
   try {
     const res = await axios.post(`${API}/api/ai/command`, { command })
@@ -597,7 +597,7 @@ async function handleAICommand(command) {
     
     // In phản hồi của AI vào Console Log
     if (data.response) {
-      addLog('SYSTEM', `Trợ lý AI: ${data.response}`, 'success')
+      if (!isApplyingState) addLog('SYSTEM', `Trợ lý AI: ${data.response}`, 'success')
     }
     
     // Kích hoạt kịch bản nếu có
@@ -623,7 +623,7 @@ async function handleAICommand(command) {
     if (err.response && err.response.data && err.response.data.response) {
       errorMsg = err.response.data.response
     }
-    addLog('SYSTEM', `Trợ lý AI: Lỗi - ${errorMsg}`, 'danger')
+    if (!isApplyingState) addLog('SYSTEM', `Trợ lý AI: Lỗi - ${errorMsg}`, 'danger')
   } finally {
     aiLoading.value = false
   }
@@ -632,25 +632,25 @@ async function handleAICommand(command) {
 function handleUpdateAutoFan({ enabled, threshold }) {
   autoFanEnabled.value = enabled
   autoFanThreshold.value = threshold
-  addLog('SYSTEM', `Tự động quạt: ${enabled ? 'BẬT' : 'TẮT'} (Ngưỡng: ${threshold}°C)`, 'info')
+  if (!isApplyingState) addLog('SYSTEM', `Tự động quạt: ${enabled ? 'BẬT' : 'TẮT'} (Ngưỡng: ${threshold}°C)`, 'info')
   schedulePersistHomeState()
 }
 
 function handleUpdateAutoGas(enabled) {
   autoGasEnabled.value = enabled
-  addLog('SYSTEM', `Tự phản ứng khi có gas: ${enabled ? 'BẬT' : 'TẮT'}`, 'info')
+  if (!isApplyingState) addLog('SYSTEM', `Tự phản ứng khi có gas: ${enabled ? 'BẬT' : 'TẮT'}`, 'info')
   schedulePersistHomeState()
 }
 
 function handleUpdateAutoMotion(enabled) {
   autoMotionEnabled.value = enabled
-  addLog('SYSTEM', `Tự động bật thiết bị khi có người: ${enabled ? 'BẬT' : 'TẮT'}`, 'info')
+  if (!isApplyingState) addLog('SYSTEM', `Tự động bật thiết bị khi có người: ${enabled ? 'BẬT' : 'TẮT'}`, 'info')
   schedulePersistHomeState()
 }
 
 // Watcher tự động bật/tắt quạt theo nhiệt độ khi chế độ Auto bật
 watch([() => sensors.value.temperature, autoFanEnabled, autoFanThreshold], () => {
-  if (!autoFanEnabled.value || sensors.value.temperature === null) return
+  if (!autoFanEnabled.value || sensors.value.temperature === null || isApplyingState) return
   
   const temp = sensors.value.temperature
   const thresh = autoFanThreshold.value
@@ -671,7 +671,7 @@ watch([() => sensors.value.temperature, autoFanEnabled, autoFanThreshold], () =>
 
 // Watcher tự động kích hoạt kịch bản SOS khi có cảnh báo Gas, và tự động tắt khi an toàn trở lại
 watch(() => sensors.value.gasAlarm, (newAlarm, oldAlarm) => {
-  if (!autoGasEnabled.value) return
+  if (!autoGasEnabled.value || isApplyingState) return
   if (newAlarm === oldAlarm) return
   if (newAlarm === true) {
     runScenario('sos')
@@ -682,7 +682,7 @@ watch(() => sensors.value.gasAlarm, (newAlarm, oldAlarm) => {
 
 // Watcher tự động bật đèn/quạt khi có người
 watch(() => sensors.value.motion, (hasMotion) => {
-  if (!autoMotionEnabled.value) return
+  if (!autoMotionEnabled.value || isApplyingState) return
   if (hasMotion) {
     addLog('SYSTEM', 'Phát hiện chuyển động: Tự động bật quạt & đèn', 'info')
     if (!deviceStates.value['Đèn Hành Lang']) toggleDevice('Đèn Hành Lang', 'Motion Auto')
@@ -730,9 +730,15 @@ onMounted(() => {
   startLockCamera()
 })
 
-watch(deviceStates, schedulePersistHomeState, { deep: true })
-watch(fanSpeeds, schedulePersistHomeState, { deep: true })
-watch(logs, schedulePersistHomeState, { deep: true })
+watch(deviceStates, () => {
+  if (!isApplyingState) schedulePersistHomeState()
+}, { deep: true })
+watch(fanSpeeds, () => {
+  if (!isApplyingState) schedulePersistHomeState()
+}, { deep: true })
+watch(logs, () => {
+  if (!isApplyingState) schedulePersistHomeState()
+}, { deep: true })
 
 onUnmounted(() => {
   clearInterval(interval)
