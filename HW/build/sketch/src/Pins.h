@@ -65,7 +65,7 @@ constexpr int SERVO_OFFSETS[SERVO_COUNT] = {0, 0, 0, 0, 0};
 // Door angles currently used in pcf8574_servo_angle_test/pcf8574_servo_angle_test.ino
 constexpr int SERVO_CLOSE_ANGLES[SERVO_COUNT] = {180, 50, 10, 8, 8};
 constexpr int SERVO_OPEN_ANGLES[SERVO_COUNT] = {0, 140, 100, 98, 98};
-constexpr uint16_t SERVO_MOVE_HOLD_FRAMES = 3;
+constexpr uint16_t SERVO_MOVE_HOLD_FRAMES = 15;
 constexpr uint16_t SERVO_MIN_PULSE_US = 500;
 constexpr uint16_t SERVO_MAX_PULSE_US = 2500;
 constexpr uint32_t SERVO_FRAME_US = 20000;

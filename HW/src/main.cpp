@@ -41,35 +41,21 @@ constexpr uint8_t DOOR_MAIN_SERVO_INDEX = 0;
 
 void sendSensorSnapshot();
 
-void setAllLights(bool on) {
-  ledLightSetAll(on);
-}
-
-void playSirenWithLights() {
-  bool lightsOn = false;
+void playSiren() {
   // Hú còi 10 nhịp (khoảng 6 giây)
   for (int i = 0; i < 10; i++) {
-    lightsOn = !lightsOn;
-    setAllLights(lightsOn);
     buzzerPlayTone(800, 300); // Tần số 800Hz trong 300ms
-
-    lightsOn = !lightsOn;
-    setAllLights(lightsOn);
+    webSocket.loop(); // Nhan lenh tu server trong luc hu coi
     buzzerPlayTone(1200, 300); // Tần số 1200Hz trong 300ms
+    webSocket.loop();
   }
-
-  setAllLights(true);
 }
 
 void triggerGasAlarmResponse() {
-  Serial.println("CANH BAO GAS: mo cua, bat quat, nhay den, phat nhac.");
+  Serial.println("CANH BAO GAS: phat nhac. Gui lenh cho server xu ly...");
   sendSensorSnapshot();
   webSocket.loop(); // process websocket tx
-  doorLockSetAll(true);
-  fanMotorSetSpeedPercent(FanId::Living, 80);
-  fanMotorSetSpeedPercent(FanId::Bed, 80);
-  fanMotorSetAll(true);
-  playSirenWithLights();
+  playSiren();
 }
 
 void printHelp() {
