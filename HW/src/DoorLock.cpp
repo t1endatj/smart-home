@@ -125,7 +125,7 @@ void doorLockSet(uint8_t index, bool open) {
 void doorLockSetAll(bool open) {
   for (uint8_t index = 0; index < IotPins::SERVO_COUNT; index++) {
     moveServoToState(index, open);
-    delay(60);
+    delay(100);
   }
   Serial.println(open ? "Tat ca cua: MO" : "Tat ca cua: KHOA");
 }

@@ -24,7 +24,7 @@ constexpr unsigned long WS_RECONNECT_INTERVAL_MS = 500;
 constexpr uint32_t WS_HEARTBEAT_INTERVAL_MS = 30000;
 constexpr uint32_t WS_HEARTBEAT_TIMEOUT_MS = 10000;
 constexpr uint8_t WS_HEARTBEAT_DISCONNECT_COUNT = 3;
-constexpr unsigned long SENSOR_SYNC_INTERVAL_MS = 1000;
+constexpr unsigned long SENSOR_SYNC_INTERVAL_MS = 2000;
 constexpr unsigned long GAS_CHECK_INTERVAL_MS = 300;
 
 WebSocketsClient webSocket;
@@ -39,6 +39,8 @@ constexpr uint8_t DOOR_KITCHEN_SERVO_INDEX = 3;
 constexpr uint8_t DOOR_TOILET_SERVO_INDEX = 2;
 constexpr uint8_t DOOR_BEDROOM_SERVO_INDEX = 1;
 constexpr uint8_t DOOR_MAIN_SERVO_INDEX = 0;
+
+void sendSensorSnapshot();
 
 void setAllLights(bool on) {
   ledLightSetAll(on);
@@ -62,7 +64,11 @@ void playSirenWithLights() {
 
 void triggerGasAlarmResponse() {
   Serial.println("CANH BAO GAS: mo cua, bat quat, nhay den, phat nhac.");
+  sendSensorSnapshot();
+  webSocket.loop(); // process websocket tx
   doorLockSetAll(true);
+  fanMotorSetSpeedPercent(FanId::Living, 80);
+  fanMotorSetSpeedPercent(FanId::Bed, 80);
   fanMotorSetAll(true);
   playSirenWithLights();
 }
