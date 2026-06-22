@@ -368,13 +368,14 @@
         <!-- Preview camera hoặc placeholder -->
         <div class="relative overflow-hidden rounded-lg bg-black aspect-video flex items-center justify-center border border-gray-800">
           <video 
-            v-if="cameraActive" 
+            v-show="cameraActive" 
             ref="videoEl" 
             autoplay 
             playsinline 
+            muted
             class="w-full h-full object-cover"
           />
-          <div v-else class="text-center p-4 text-[10px] text-gray-500 flex flex-col items-center gap-1">
+          <div v-show="!cameraActive" class="text-center p-4 text-[10px] text-gray-500 flex flex-col items-center gap-1">
             <span>📷 Camera đang tắt</span>
             <span class="text-[8px] text-gray-600">Bấm "Mở Camera" để bắt đầu quét khuôn mặt</span>
           </div>
@@ -560,13 +561,13 @@ async function startCamera() {
   faceStatusText.value = ''
   try {
     cameraActive.value = true
-    await nextTick()
     const mediaStream = await navigator.mediaDevices.getUserMedia({ 
       video: { width: 640, height: 480 } 
     })
     stream = mediaStream
     if (videoEl.value) {
       videoEl.value.srcObject = mediaStream
+      videoEl.value.play().catch(err => console.error('Error playing video:', err))
     }
     emit('add-log', { tag: 'SYSTEM', msg: 'Đã mở camera thành công.', type: 'info' })
   } catch (err) {
@@ -698,8 +699,9 @@ const tempChartOptions = computed(() => ({
   },
   xaxis: {
     categories: sensorHistory.value.map(item => {
-      const parts = item.timestamp.split(' ')
-      return parts.length > 1 ? parts[1] : item.timestamp
+      if (!item.timestamp) return ''
+      const parts = String(item.timestamp).split(' ')
+      return parts.length > 1 ? parts[1] : String(item.timestamp)
     }),
     labels: {
       show: true,
@@ -748,8 +750,9 @@ const motionChartOptions = computed(() => ({
   },
   xaxis: {
     categories: sensorHistory.value.map(item => {
-      const parts = item.timestamp.split(' ')
-      return parts.length > 1 ? parts[1] : item.timestamp
+      if (!item.timestamp) return ''
+      const parts = String(item.timestamp).split(' ')
+      return parts.length > 1 ? parts[1] : String(item.timestamp)
     }),
     labels: {
       show: true,

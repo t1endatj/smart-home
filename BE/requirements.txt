@@ -4,3 +4,5 @@ pandas
 httpx
 python-dotenv
 websockets
+opencv-python
+numpy
