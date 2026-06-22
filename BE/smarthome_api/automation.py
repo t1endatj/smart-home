@@ -104,12 +104,21 @@ class AutomationEngine:
                 gas_changed |= set_device_state(next_payload, device_name, True)
             for device_name in DOOR_DEVICE_NAMES:
                 gas_changed |= set_device_state(next_payload, device_name, True)
+            
+            for fan_name in ("fan", "fan_bedroom"):
+                gas_changed |= set_device_state(next_payload, fan_name, True)
+                if "fanSpeeds" not in next_payload:
+                    next_payload["fanSpeeds"] = {}
+                if next_payload["fanSpeeds"].get(fan_name) != 80:
+                    next_payload["fanSpeeds"][fan_name] = 80
+                    gas_changed = True
+                    
             if gas_changed:
                 changed = True
                 append_home_log(
                     next_payload,
                     "AUTO",
-                    "Khí gas quá cao, tự động bật toàn bộ đèn và mở toàn bộ cửa.",
+                    "Khí gas quá cao, tự động bật toàn bộ đèn, quạt và mở toàn bộ cửa.",
                     "danger",
                 )
 
