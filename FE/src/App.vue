@@ -37,7 +37,7 @@
     </transition>
 
     <!-- Navbar -->
-    <nav :class="voiceListening ? 'blur-sm scale-[0.995]' : ''" class="bg-[#18181c] border-b border-gray-800/40 px-6 py-4 flex items-center justify-between transition duration-300">
+    <nav :class="[voiceListening ? 'blur-sm scale-[0.995]' : '', !systemUnlocked ? 'blur-md pointer-events-none' : '']" class="bg-[#18181c] border-b border-gray-800/40 px-6 py-4 flex items-center justify-between transition duration-300">
       <div class="flex items-center gap-2">
         <span class="text-2xl">🏠</span>
         <span class="text-lg font-semibold text-white">Smart Home Dashboard</span>
@@ -54,7 +54,7 @@
     </nav>
 
     <!-- Grid Content Layout -->
-    <div :class="voiceListening ? 'blur-md scale-[0.985]' : ''" class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-100px)] lg:min-h-[500px] transition duration-300">
+    <div :class="[voiceListening ? 'blur-md scale-[0.985]' : '', !systemUnlocked ? 'blur-md pointer-events-none' : '']" class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-100px)] lg:min-h-[500px] transition duration-300">
       
       <!-- Left Column: 3D Model -->
       <div class="lg:col-span-2 h-full flex flex-col">
@@ -93,16 +93,194 @@
       </div>
 
     </div>
+
+    <!-- Face ID System Lock Overlay -->
+    <transition
+      enter-active-class="transition duration-500 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-300 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="!systemUnlocked"
+        class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d0e12]/95 backdrop-blur-lg p-6 select-none"
+      >
+        <div class="w-full max-w-md bg-[#18181c] border border-gray-800 rounded-3xl p-6 shadow-2xl flex flex-col items-center gap-6 relative overflow-hidden">
+          
+          <!-- Background Glow decoration -->
+          <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <!-- Header -->
+          <div class="text-center">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-bold uppercase tracking-wider mb-2">
+              🔒 BẢO MẬT HỆ THỐNG
+            </div>
+            <h2 class="text-lg font-bold text-white uppercase tracking-wide">Xác thực khuôn mặt</h2>
+            <p class="text-[10px] text-gray-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
+              Vui lòng hướng khuôn mặt vào camera để mở khóa bảng điều khiển Smart Home
+            </p>
+          </div>
+
+          <!-- Video container with scanner animation -->
+          <div class="relative w-full aspect-video rounded-2xl bg-black border border-gray-800 overflow-hidden flex items-center justify-center shadow-inner">
+            <video 
+              v-show="lockCameraActive"
+              ref="lockVideoEl" 
+              autoplay 
+              playsinline 
+              muted 
+              class="w-full h-full object-cover"
+            />
+            
+            <!-- Camera placeholder when off -->
+            <div v-show="!lockCameraActive" class="text-center p-4 text-[10px] text-gray-500 flex flex-col items-center gap-1.5">
+              <span class="text-2xl animate-pulse">📷</span>
+              <span class="font-semibold uppercase tracking-wider text-gray-400">Camera chưa sẵn sàng</span>
+              <span class="text-[8px] text-gray-600">Đang khởi tạo camera hoặc bấm nút bên dưới</span>
+            </div>
+
+            <!-- Laser Scanning line effect -->
+            <div 
+              v-if="lockCameraActive && lockFaceStatus === 'processing'" 
+              class="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_8px_#22d3ee] animate-scan"
+            />
+            
+            <!-- Scan Status overlay -->
+            <div 
+              v-if="lockFaceStatus" 
+              :class="[
+                'absolute inset-0 flex items-center justify-center text-xs font-bold text-center px-4 backdrop-blur-sm transition-all',
+                lockFaceStatus === 'processing' ? 'bg-black/40 text-cyan-300' : '',
+                lockFaceStatus === 'success' ? 'bg-emerald-950/85 text-emerald-300' : '',
+                lockFaceStatus === 'failed' ? 'bg-red-950/85 text-red-300' : ''
+              ]"
+            >
+              <div class="flex flex-col items-center gap-1">
+                <span v-if="lockFaceStatus === 'processing'" class="animate-spin text-lg">🔄</span>
+                <span v-if="lockFaceStatus === 'success'" class="text-lg">✅</span>
+                <span v-if="lockFaceStatus === 'failed'" class="text-lg">❌</span>
+                <span>{{ lockFaceStatusText }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="w-full flex flex-col gap-2">
+            <button 
+              v-if="lockCameraActive"
+              type="button" 
+              @click="verifyLockFace"
+              :disabled="lockFaceStatus === 'processing'"
+              class="w-full bg-cyan-600/10 hover:bg-cyan-600/20 active:scale-[0.98] border border-cyan-500/30 text-cyan-300 py-2 rounded-xl text-xs font-bold transition-all text-center cursor-pointer"
+            >
+              Quét Khuôn Mặt
+            </button>
+            <button 
+              type="button" 
+              @click="lockCameraActive ? stopLockCamera() : startLockCamera()"
+              class="w-full bg-gray-800/40 hover:bg-gray-800/60 active:scale-[0.98] border border-gray-700 text-gray-300 py-2 rounded-xl text-xs font-bold transition-all text-center cursor-pointer"
+            >
+              {{ lockCameraActive ? 'Tắt Camera' : 'Bật Camera' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
+
 <script setup>
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import axios from 'axios'
 import ControlPanel from './components/ControlPanel.vue'
 import SmartHome3D from './components/SmartHome3D.vue'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
+const systemUnlocked = ref(false)
+const lockCameraActive = ref(false)
+const lockVideoEl = ref(null)
+const lockFaceStatus = ref(null)
+const lockFaceStatusText = ref('')
+let lockStream = null
+
+async function startLockCamera() {
+  lockFaceStatus.value = null
+  lockFaceStatusText.value = ''
+  try {
+    lockCameraActive.value = true
+    await nextTick()
+    const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { width: 640, height: 480 } 
+    })
+    lockStream = mediaStream
+    if (lockVideoEl.value) {
+      lockVideoEl.value.srcObject = mediaStream
+      lockVideoEl.value.play().catch(e => console.error("Error playing lock camera:", e))
+    }
+  } catch (err) {
+    lockCameraActive.value = false
+    console.error('Lỗi mở camera lock:', err)
+    lockFaceStatus.value = 'failed'
+    lockFaceStatusText.value = 'Không thể truy cập camera. Vui lòng cấp quyền.'
+  }
+}
+
+function stopLockCamera() {
+  if (lockStream) {
+    lockStream.getTracks().forEach(track => track.stop())
+    lockStream = null
+  }
+  lockCameraActive.value = false
+  if (lockVideoEl.value) {
+    lockVideoEl.value.srcObject = null
+  }
+}
+
+async function verifyLockFace() {
+  if (!lockVideoEl.value) return
+
+  lockFaceStatus.value = 'processing'
+  lockFaceStatusText.value = 'Đang quét khuôn mặt...'
+
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = lockVideoEl.value.videoWidth || 640
+    canvas.height = lockVideoEl.value.videoHeight || 480
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(lockVideoEl.value, 0, 0, canvas.width, canvas.height)
+    
+    const base64Image = canvas.toDataURL('image/jpeg', 0.8)
+    
+    const res = await axios.post(`${API}/api/face/verify`, {
+      image: base64Image
+    })
+
+    if (res.data && res.data.result === true) {
+      const matchedName = res.data.name || 'Thành viên'
+      lockFaceStatus.value = 'success'
+      lockFaceStatusText.value = `Xác thực thành công! Xin chào ${matchedName}.`
+      
+      setTimeout(() => {
+        stopLockCamera()
+        systemUnlocked.value = true
+      }, 1500)
+    } else {
+      const errMsg = res.data.message || res.data.error || 'Khuôn mặt không trùng khớp.'
+      lockFaceStatus.value = 'failed'
+      lockFaceStatusText.value = 'Xác thực thất bại! Không tìm thấy mẫu khớp.'
+    }
+  } catch (err) {
+    console.error('Lỗi xác thực khóa:', err)
+    lockFaceStatus.value = 'failed'
+    lockFaceStatusText.value = 'Lỗi kết nối máy chủ.'
+  }
+}
+
 
 const connected = ref(false)
 const aiLoading = ref(false)
@@ -547,6 +725,9 @@ onMounted(() => {
     addLog('RELAY', 'Khởi tạo kênh Rơ-le thành công.', 'warning')
     addLog('SYSTEM', 'Serial 115200 sẵn sàng.', 'info')
   }, 100)
+
+  // Auto start camera for Face ID lock screen
+  startLockCamera()
 })
 
 watch(deviceStates, schedulePersistHomeState, { deep: true })
@@ -557,5 +738,19 @@ onUnmounted(() => {
   clearInterval(interval)
   clearInterval(syncInterval)
   clearTimeout(persistTimer)
+  stopLockCamera()
 })
+
 </script>
+
+<style scoped>
+@keyframes scan {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+.animate-scan {
+  animation: scan 2.5s ease-in-out infinite;
+}
+</style>
+

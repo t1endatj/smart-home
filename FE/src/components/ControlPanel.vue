@@ -488,9 +488,9 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
         @click.self="closeCameraModal"
       >
-        <div class="relative w-full max-w-2xl bg-[#18181c] border border-gray-800/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="relative w-full max-w-2xl max-h-[90vh] bg-[#18181c] border border-gray-800/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
           <!-- Modal Header -->
-          <div class="flex items-center justify-between border-b border-gray-800 px-4 py-3 bg-[#131316]">
+          <div class="flex items-center justify-between border-b border-gray-800 px-4 py-3 bg-[#131316] shrink-0">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
               📷 Camera Face ID (Phóng to)
             </h3>
@@ -504,13 +504,13 @@
           </div>
 
           <!-- Video content -->
-          <div class="relative aspect-video bg-black flex items-center justify-center">
+          <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-0">
             <video 
               ref="videoElModal" 
               autoplay 
               playsinline 
               muted 
-              class="w-full h-full object-cover"
+              class="w-full h-full max-h-[55vh] object-contain"
             />
             
             <!-- Lớp phủ trạng thái -->
@@ -533,7 +533,7 @@
           </div>
 
           <!-- Actions -->
-          <div class="p-3 flex gap-2.5 bg-[#111113] border-t border-gray-800/80">
+          <div class="p-3 flex gap-2.5 bg-[#111113] border-t border-gray-800/80 shrink-0">
             <button 
               type="button"
               @click="cameraActive ? stopCameraFromModal() : startCamera()"
@@ -568,9 +568,9 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
         @click.self="closeChartModal"
       >
-        <div class="relative w-full max-w-3xl bg-[#18181c] border border-gray-800/80 rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
+        <div class="relative w-full max-w-3xl max-h-[90vh] bg-[#18181c] border border-gray-800/80 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 overflow-hidden">
           <!-- Modal Header -->
-          <div class="flex items-center justify-between border-b border-gray-800/80 pb-3">
+          <div class="flex items-center justify-between border-b border-gray-800/80 pb-3 shrink-0">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
               📊 Biểu đồ lịch sử cảm biến (Phóng to)
             </h3>
@@ -611,7 +611,7 @@
           </div>
 
           <!-- Enlarged Chart Content -->
-          <div class="bg-[#0f0f14] border border-gray-800/40 rounded-xl p-3 h-[300px] flex items-center justify-center relative overflow-hidden">
+          <div class="bg-[#0f0f14] border border-gray-800/40 rounded-xl p-3 flex-1 h-[300px] max-h-[50vh] flex items-center justify-center relative overflow-hidden min-h-0">
             <div v-show="activeChartTab === 'temp'" class="w-full h-full">
               <apexchart 
                 v-if="sensorHistory.length > 0"
