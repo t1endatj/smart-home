@@ -1,7 +1,12 @@
+import io
 import json
 import re
-
+import base64
 import httpx
+try:
+    from gtts import gTTS
+except ImportError:
+    gTTS = None
 
 from .config import (
     AI_SYSTEM_PROMPT,
@@ -136,8 +141,22 @@ def handle_ai_command(user_text: str) -> dict:
     if scenario not in (None, "welcome", "sleep", "sos", "alloff"):
         scenario = None
 
+    response_text = str(parsed.get("response") or "Đã nhận lệnh.").strip()
+    audio_base64 = None
+
+    if gTTS is not None and response_text:
+        try:
+            tts = gTTS(response_text, lang='vi')
+            fp = io.BytesIO()
+            tts.write_to_fp(fp)
+            fp.seek(0)
+            audio_base64 = base64.b64encode(fp.read()).decode('utf-8')
+        except Exception as e:
+            print(f"Lỗi tạo TTS: {e}")
+
     return {
-        "response": str(parsed.get("response") or "Đã nhận lệnh.").strip(),
+        "response": response_text,
         "actions": normalized_actions,
         "scenario": scenario,
+        "audio_base64": audio_base64,
     }

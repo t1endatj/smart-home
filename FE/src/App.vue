@@ -598,6 +598,16 @@ async function handleAICommand(command) {
     // In phản hồi của AI vào Console Log
     if (data.response) {
       if (!isApplyingState) addLog('SYSTEM', `Trợ lý AI: ${data.response}`, 'success')
+      
+      // Phát âm thanh TTS nếu Backend có trả về audio_base64
+      if (data.audio_base64) {
+        try {
+          const audio = new Audio("data:audio/mp3;base64," + data.audio_base64)
+          audio.play()
+        } catch (e) {
+          console.error("Lỗi phát âm thanh TTS:", e)
+        }
+      }
     }
     
     // Kích hoạt kịch bản nếu có
