@@ -10,7 +10,10 @@ from .realtime import emit_home_state_delta
 from .schemas import AICommandRequest, ControlData, HomeStatePayload, SensorData, FaceRequest
 from .face_service import verify_face
 from .storage import (
+    append_home_log,
+    build_default_home_payload,
     build_full_device_commands,
+    clone_payload,
     get_current_home_payload,
     get_home_state_record,
     get_latest_sensor_snapshot,
@@ -19,6 +22,7 @@ from .storage import (
     normalize_home_payload,
     normalize_sensor_payload,
     save_home_state_payload,
+    set_device_state,
     store_sensor_data,
 )
 from .websocket_server import WebSocketBroadcastServer
@@ -141,8 +145,40 @@ def set_home_state(data: HomeStatePayload):
     return {"status": "ok", "updated_at": updated_at, "revision": revision}
 
 
+# Danh sách thiết bị tự động kích hoạt khi quét mặt thành công
+_FACE_UNLOCK_DEVICES = [
+    ("Cửa Chính", True),           # Mở cửa hành lang
+    ("Đèn Hành Lang", True),        # Bật đèn hành lang
+    ("Đèn Chùm Trung Tâm", True),   # Bật đèn nhà chính
+    ("Quạt Trần Phòng Khách", True), # Bật quạt nhà chính
+]
+
+
 @app.post("/api/face/verify")
 def api_verify_face(req: FaceRequest):
-    return verify_face(req.image)
+    result = verify_face(req.image)
+
+    if result.get("result") is True:
+        # Áp dụng automation khi nhận diện khuôn mặt thành công
+        previous_payload = get_current_home_payload() or build_default_home_payload()
+        next_payload = clone_payload(previous_payload)
+        changed = False
+
+        for device_name, status in _FACE_UNLOCK_DEVICES:
+            if set_device_state(next_payload, device_name, status):
+                changed = True
+
+        if changed:
+            face_name = result.get("name", "chủ nhà")
+            append_home_log(
+                next_payload,
+                "FACE",
+                f"Nhận diện khuôn mặt thành công ({face_name}). Mở cửa, bật đèn hành lang, đèn & quạt nhà chính.",
+                "success",
+            )
+            updated_at, revision = save_home_state_payload(next_payload)
+            emit_home_state_delta(ws_server, previous_payload, next_payload, revision, updated_at)
+
+    return result
 
 
